@@ -7,7 +7,7 @@ public final class FavoritesContract {
 
     private FavoritesContract() {}
 
-    public static final String CONTENT_AUTHORITY = "com.riskitbiskit.gameofflicks";
+    public static final String CONTENT_AUTHORITY = "com.riskitbiskit.moviereviewbuddy";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
     public static final String PATH_FAVE = "favorite";
 
