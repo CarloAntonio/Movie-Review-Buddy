@@ -29,3 +29,9 @@ Main Screen + Menu (Landscape) </br>
 * Glide
 * Android Support
 	* AppCompat, Constraint, Design
+
+### Notes:
+* Republish of Game of Flicks
+	* Update to more appropriate name
+	* Uploaded through more proper git and github channels to show proficiency in git commits, push, pulls, etc.
+
