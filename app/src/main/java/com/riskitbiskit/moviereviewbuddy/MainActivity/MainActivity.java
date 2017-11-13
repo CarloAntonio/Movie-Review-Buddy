@@ -21,6 +21,9 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.TextView;
 
+import com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract;
+import com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract.FavoritesEntry;
+import com.riskitbiskit.moviereviewbuddy.DetailActivity.DetailsActivity;
 import com.riskitbiskit.moviereviewbuddy.R;
 
 import java.util.ArrayList;

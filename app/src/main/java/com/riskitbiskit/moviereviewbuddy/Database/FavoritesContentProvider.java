@@ -11,6 +11,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract.FavoritesEntry;
+
 public class FavoritesContentProvider extends ContentProvider {
     public static final String LOG_TAG = FavoritesContentProvider.class.getSimpleName();
 
