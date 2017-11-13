@@ -78,9 +78,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         if (savedInstanceState != null && savedInstanceState.containsKey(ON_SAVE_INSTANCE_STATE_KEY)
                 && savedInstanceState.containsKey(FAVE_LIST_BOOLEAN)) {
+
             isFavoritesList = savedInstanceState.getBoolean(FAVE_LIST_BOOLEAN);
             cursorToList = savedInstanceState.getParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY);
             mMovieArrayAdapter.addAll(cursorToList);
+
         }
 
         moviesGridView.setAdapter(mMovieArrayAdapter);

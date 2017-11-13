@@ -41,5 +41,5 @@
         app:srcCompat="@drawable/powered_by"
         android:contentDescription="@string/the_movie_db_logo"
         android:layout_alignParentBottom="true"/>
-    
+
 </RelativeLayout>
