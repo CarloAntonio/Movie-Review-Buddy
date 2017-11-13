@@ -51,8 +51,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     TextView noInternetTV;
     @BindView(R.id.content_grid_view)
     GridView moviesGridView;
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
 
     private MovieArrayAdapter mMovieArrayAdapter;
     private LoaderManager.LoaderCallbacks<Cursor> mLoaderCallbacks;
@@ -71,9 +69,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         //Bind views
         ButterKnife.bind(this);
-
-        //Setup custom toolbar
-        setSupportActionBar(toolbar);
 
         //Initialize new Array List
         cursorToList = new ArrayList<>();
