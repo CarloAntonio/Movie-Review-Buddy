@@ -41,13 +41,13 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
+    
     //Testing
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     //Constants
     public static final String API_KEY = "9248410cd68fafd7d26df8b01e1057b0";
     public static final String ROOT_URL = "https://api.themoviedb.org/3";
-    public static final String PATH = "path";
     public static final String TOP_RATED_PATH = "/movie/top_rated";
     public static final String MOST_POPULAR_PATH = "/movie/popular";
     //public static final String NOW_PLAYING_PATH = "/movie/now_playing"; //Future Path?
@@ -55,17 +55,15 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public static final String FAVE_LIST_BOOLEAN = "faveBoolean";
     public static final int MOVIE_LOADER = 0;
 
-    //Bind Views
+    //Views
     @BindView(R.id.no_internet_view)
     TextView noInternetTV;
     @BindView(R.id.content_grid_view)
     GridView moviesGridView;
 
+    //Fields
     private MovieArrayAdapter mMovieArrayAdapter;
     private boolean isFavoritesList = false;
-    ArrayList<Movie> cursorToList;
-
-    //Test
     OkHttpClient mOkHttpClient;
     List<Movie> movies;
 
@@ -99,8 +97,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 }
             }
         }
-
-
 
         moviesGridView.setAdapter(mMovieArrayAdapter);
 
