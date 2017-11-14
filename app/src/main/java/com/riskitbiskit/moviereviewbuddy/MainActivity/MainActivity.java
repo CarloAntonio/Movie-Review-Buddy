@@ -194,7 +194,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void extractInstanceState(Bundle savedInstanceState) {
         isFavoritesList = savedInstanceState.getBoolean(FAVE_LIST_BOOLEAN);
+        //pull list from saved instance state
         movies = savedInstanceState.getParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY);
+        //clean up old data from array adapter
+        mMovieArrayAdapter.clear();
+        //add saved data to array adapter
         mMovieArrayAdapter.addAll(movies);
     }
 
@@ -308,9 +312,6 @@ public class MainActivity extends AppCompatActivity {
         //Package relevant info
         outState.putParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY, (ArrayList<? extends Parcelable>) movies);
         outState.putBoolean(FAVE_LIST_BOOLEAN, isFavoritesList);
-
-        //Clear up array adapter
-        mMovieArrayAdapter.clear();
 
         super.onSaveInstanceState(outState);
     }
