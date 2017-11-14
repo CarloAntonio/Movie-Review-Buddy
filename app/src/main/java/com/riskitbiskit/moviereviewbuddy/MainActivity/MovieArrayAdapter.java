@@ -15,9 +15,17 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class MovieArrayAdapter extends ArrayAdapter<Movie> {
 
-    public static final String POSTER_ROOT = "http://image.tmdb.org/t/p/w500/";
+    //Constants
+    private static final String POSTER_ROOT = "http://image.tmdb.org/t/p/w500/";
+
+    //Views
+    @BindView(R.id.poster_iv)
+    ImageView posterIV;
 
     public MovieArrayAdapter(@NonNull Context context, @LayoutRes int resource, @NonNull List movies) {
         super(context, resource, movies);
@@ -36,16 +44,13 @@ public class MovieArrayAdapter extends ArrayAdapter<Movie> {
         //Get movie from passed in list
         Movie currentMovie = getItem(position);
 
-        String currentTitle = currentMovie.getOriginalTitle();
-        String currentOverview = currentMovie.getOverview();
-        double currentVoteAverage = currentMovie.getVoteAverage();
+        //Get poster from specific movie
         String currentPosterPath = currentMovie.getPosterPath();
-        String currentReleaseDate = currentMovie.getReleaseDate();
 
         //Attach poster to view
-        ImageView posterImageView = itemView.findViewById(R.id.poster_iv);
+        ButterKnife.bind(this, itemView);
         String fullPosterPath = appendPosterPath(currentPosterPath);
-        Picasso.with(getContext()).load(fullPosterPath).into(posterImageView);
+        Picasso.with(getContext()).load(fullPosterPath).into(posterIV);
 
         return itemView;
     }

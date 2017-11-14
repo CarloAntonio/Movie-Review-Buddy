@@ -284,8 +284,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        //clear old list of movies
         movies.clear();
 
+        //cycle through each row inside cursor
         while (cursor.moveToNext()) {
 
             //extract data from cursor
