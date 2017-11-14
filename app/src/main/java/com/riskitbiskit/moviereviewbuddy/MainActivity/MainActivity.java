@@ -2,19 +2,16 @@ package com.riskitbiskit.moviereviewbuddy.MainActivity;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Parcelable;
-import android.preference.PreferenceManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,7 +20,6 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.TextView;
 
-import com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract;
 import com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract.FavoritesEntry;
 import com.riskitbiskit.moviereviewbuddy.DetailActivity.DetailsActivity;
 import com.riskitbiskit.moviereviewbuddy.R;
@@ -94,7 +90,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         } else {
             // if/else statement allows favorite page to be viewed outside of a network
             if (isFavoritesList) {
-                getSupportLoaderManager().restartLoader(MOVIE_LOADER, null, this);
                 noInternetTV.setText("");
             } else {
                 if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
@@ -254,15 +249,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         outState.putBoolean(FAVE_LIST_BOOLEAN, isFavoritesList);
 
         super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (isFavoritesList) {
-            getSupportLoaderManager().restartLoader(MOVIE_LOADER, null, this);
-        }
     }
 
     @Override
