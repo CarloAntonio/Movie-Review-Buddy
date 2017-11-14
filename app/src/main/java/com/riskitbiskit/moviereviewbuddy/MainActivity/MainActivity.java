@@ -12,6 +12,7 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -55,11 +56,12 @@ public class MainActivity extends AppCompatActivity {
     public static final String PATH = "path";
     public static final String TOP_RATED_PATH = "/movie/top_rated";
     public static final String MOST_POPULAR_PATH = "/movie/popular";
+    //public static final String NOW_PLAYING_PATH = "/movie/now_playing"; //Future Path?
     public static final String ON_SAVE_INSTANCE_STATE_KEY = "key";
     public static final String FAVE_LIST_BOOLEAN = "faveBoolean";
     public static final int MOVIE_LOADER = 0;
 
-    //General global static constants
+    //Bind Views
     @BindView(R.id.no_internet_view)
     TextView noInternetTV;
     @BindView(R.id.content_grid_view)
@@ -74,39 +76,30 @@ public class MainActivity extends AppCompatActivity {
     OkHttpClient mOkHttpClient;
     List<Movie> movies;
 
-
-    //Possible future API path
-    //public static final String NOW_PLAYING_PATH = "/movie/now_playing";
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        //Bind views
         ButterKnife.bind(this);
 
-        //test
+        //Instantiate new array list
         movies = new ArrayList<>();
-
-        if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
-
-            makeNetworkCall();
-        } else {
-            noInternetTV.setText(R.string.no_internet_connectivity);
-        }
 
         //Setup adapter
         mMovieArrayAdapter = new MovieArrayAdapter(this, R.layout.movie_poster_item, new ArrayList<Movie>());
 
-        if (savedInstanceState != null && savedInstanceState.containsKey(ON_SAVE_INSTANCE_STATE_KEY)
-                && savedInstanceState.containsKey(FAVE_LIST_BOOLEAN)) {
+        if (savedInstanceState != null &&
+                savedInstanceState.containsKey(ON_SAVE_INSTANCE_STATE_KEY) &&
+                savedInstanceState.containsKey(FAVE_LIST_BOOLEAN)) {
 
-            isFavoritesList = savedInstanceState.getBoolean(FAVE_LIST_BOOLEAN);
-            cursorToList = savedInstanceState.getParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY);
-            mMovieArrayAdapter.addAll(cursorToList);
+            extractInstanceState(savedInstanceState);
 
+        } else {
+            if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
+                makeNetworkCall();
+            } else {
+                noInternetTV.setText(R.string.no_internet_connectivity);
+            }
         }
 
         moviesGridView.setAdapter(mMovieArrayAdapter);
@@ -197,6 +190,18 @@ public class MainActivity extends AppCompatActivity {
                 noInternetTV.setText(R.string.no_internet_connectivity);
             }
         }
+    }
+
+    private void extractInstanceState(Bundle savedInstanceState) {
+        isFavoritesList = savedInstanceState.getBoolean(FAVE_LIST_BOOLEAN);
+        movies = savedInstanceState.getParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY);
+        mMovieArrayAdapter.addAll(movies);
+    }
+
+    public NetworkInfo getActiveNetworkInfo() {
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        return connectivityManager.getActiveNetworkInfo();
     }
 
     private void makeNetworkCall() {
@@ -297,18 +302,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-    public NetworkInfo getActiveNetworkInfo() {
-        ConnectivityManager connectivityManager =
-                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        return connectivityManager.getActiveNetworkInfo();
-    }
-
     @Override
     protected void onSaveInstanceState(Bundle outState) {
 
-        outState.putParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY, cursorToList);
+        //Package relevant info
+        outState.putParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY, (ArrayList<? extends Parcelable>) movies);
         outState.putBoolean(FAVE_LIST_BOOLEAN, isFavoritesList);
+
+        //Clear up array adapter
+        mMovieArrayAdapter.clear();
 
         super.onSaveInstanceState(outState);
     }
