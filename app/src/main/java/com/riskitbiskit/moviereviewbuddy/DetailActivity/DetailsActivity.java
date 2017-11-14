@@ -10,6 +10,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -24,15 +26,29 @@ import com.riskitbiskit.moviereviewbuddy.MainActivity.Movie;
 import com.riskitbiskit.moviereviewbuddy.R;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import static com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract.*;
 
 public class DetailsActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<String>>,
         View.OnClickListener{
+
+    //Testing
+    public static final String LOG_TAG = DetailsActivity.class.getSimpleName();
 
     //Constants
     public static final int PROMO_LOADER = 0;
@@ -49,7 +65,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private String moviePosterPath;
     private String movieReleaseDate;
     private long movieId;
-    String movieRatingAsString;
 
     //Views
     @BindView(R.id.loading_error)
@@ -71,6 +86,9 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     @BindView(R.id.add_to_faves_button)
     Button favesButton;
 
+    //Test
+    OkHttpClient mOkHttpClient;
+
     //Loaders
     LoaderManager.LoaderCallbacks reviewLoaderCallback;
     LoaderManager.LoaderCallbacks addOrDeleteCallback;
@@ -82,20 +100,23 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         setContentView(R.layout.activity_details);
         ButterKnife.bind(this);
 
+        //initialize OkHttpClient
+        mOkHttpClient = new OkHttpClient();
+
         //Get intent details
         Intent intent = getIntent();
         if (intent != null
-                && intent.hasExtra(Movie.MOVIE_NAME)
-                && intent.hasExtra(Movie.MOVIE_OVERVIEW) && intent.hasExtra(Movie.MOVIE_RATING)
-                && intent.hasExtra(Movie.MOVIE_POSTER_PATH) && intent.hasExtra(Movie.MOVIE_RELEASE_DATE)
-                && intent.hasExtra(Movie.MOVIE_ID)) {
+                && intent.hasExtra(Movie.MOVIE_NAME) && intent.hasExtra(Movie.MOVIE_OVERVIEW)
+                && intent.hasExtra(Movie.MOVIE_RATING) && intent.hasExtra(Movie.MOVIE_POSTER_PATH)
+                && intent.hasExtra(Movie.MOVIE_RELEASE_DATE) && intent.hasExtra(Movie.MOVIE_ID)) {
 
+            //Hide loading error
             relativeLayout.setVisibility(View.INVISIBLE);
 
+            //Extract data from intent
             movieName = intent.getStringExtra(Movie.MOVIE_NAME);
             movieOverview = intent.getStringExtra(Movie.MOVIE_OVERVIEW);
             movieRating = intent.getDoubleExtra(Movie.MOVIE_RATING, 0.0);
-            movieRatingAsString = String.valueOf(movieRating);
             moviePosterPath = intent.getStringExtra(Movie.MOVIE_POSTER_PATH);
             movieReleaseDate = intent.getStringExtra(Movie.MOVIE_RELEASE_DATE);
             movieId = intent.getLongExtra(Movie.MOVIE_ID, 0);
@@ -103,7 +124,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             //Set views
             titleTV.setText(movieName);
             overviewTV.setText(movieOverview);
-            ratingTV.setText(movieRatingAsString);
+            ratingTV.setText(String.valueOf(movieRating));
             releaseTV.setText(movieReleaseDate);
 
             //Set image to view
@@ -119,8 +140,14 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             });
 
         } else {
+            //Show loading error
             relativeLayout.setVisibility(View.VISIBLE);
         }
+
+        makeReviewNetworkCall();
+//        makePromoTrailerCall();
+
+
 
         addOrDeleteCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
             @Override
@@ -194,44 +221,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             }
         };
 
-        reviewLoaderCallback = new LoaderManager.LoaderCallbacks<List<Review>>() {
-            @Override
-            public Loader<List<Review>> onCreateLoader(int i, Bundle bundle) {
-                Uri baseUri = Uri.parse(MainActivity.ROOT_URL + "/movie/" + movieId + "/reviews");
-                Uri.Builder builder = baseUri.buildUpon();
-
-                builder.appendQueryParameter("api_key", MainActivity.API_KEY);
-                builder.appendQueryParameter("language", "en-US");
-                builder.appendQueryParameter("page", "1");
-
-                return new ReviewLoader(getBaseContext(), builder.toString());
-            }
-
-            @Override
-            public void onLoadFinished(Loader<List<Review>> loader, List<Review> reviews) {
-                View tableRow;
-                if (!reviews.isEmpty()) {
-                    //Create a new row for each video path
-                    for (int i = 0; i < reviews.size(); i++) {
-                        tableRow = View.inflate(getBaseContext(), R.layout.review_table_row, null);
-                        TextView contentTextView = tableRow.findViewById(R.id.review_content_tv);
-                        TextView authorTextView = tableRow.findViewById(R.id.review_author_tv);
-
-                        //set text
-                        contentTextView.setText(reviews.get(i).getContent());
-                        authorTextView.setText("-" + reviews.get(i).getAuthor());
-
-                        reviewTableLayout.addView(tableRow);
-                    }
-                }
-            }
-
-            @Override
-            public void onLoaderReset(Loader<List<Review>> loader) {
-                reviewTableLayout.removeAllViews();
-            }
-        };
-
         buttonCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
             @Override
             public Loader onCreateLoader(int i, Bundle bundle) {
@@ -276,7 +265,103 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         getLoaderManager().initLoader(BUTTON_LOADER, null, buttonCallback);
         getLoaderManager().initLoader(PROMO_LOADER, null, this);
-        getLoaderManager().initLoader(REVIEW_LOADER, null, reviewLoaderCallback);
+    }
+
+//    private void makePromoTrailerCall() {
+//        mOkHttpClient = new OkHttpClient();
+//
+//        Uri baseUri = Uri.parse(MainActivity.ROOT_URL + "/movie/" + movieId + "/videos");
+//        Uri.Builder builder = baseUri.buildUpon();
+//
+//        builder.appendQueryParameter("api_key", MainActivity.API_KEY);
+//        builder.appendQueryParameter("language", "en-US");
+//
+//        Request request = new Request.Builder()
+//                .url(builder.toString())
+//                .build();
+//
+//        mOkHttpClient
+//    }
+
+    private void makeReviewNetworkCall() {
+        mOkHttpClient = new OkHttpClient();
+
+        Uri baseUri = Uri.parse(MainActivity.ROOT_URL + "/movie/" + movieId + "/reviews");
+        Uri.Builder builder = baseUri.buildUpon();
+
+        builder.appendQueryParameter("api_key", MainActivity.API_KEY);
+        builder.appendQueryParameter("language", "en-US");
+        builder.appendQueryParameter("page", "1");
+
+        Request request = new Request.Builder()
+                .url(builder.toString())
+                .build();
+
+        mOkHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(LOG_TAG, "Error requesting review data from server");
+            }
+
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        processReviewResponse(response);
+                    }
+                });
+            }
+        });
+    }
+
+    private void processReviewResponse(Response response) {
+
+        //create a new list of reviews
+        List<Review> reviews = new ArrayList<>();
+
+        //process response
+        try {
+            //transform response to string form
+            String jsonResponse = response.body().string();
+
+            if (TextUtils.isEmpty(jsonResponse)) {
+                //TODO
+            }
+
+            //parse through json response
+            JSONObject rootObject = new JSONObject(jsonResponse);
+            JSONArray resultsArray = rootObject.getJSONArray("results");
+            for (int i = 0; i < resultsArray.length(); i++) {
+                JSONObject currentMovieReview = resultsArray.getJSONObject(i);
+
+                String author = currentMovieReview.getString("author");
+                String content = currentMovieReview.getString("content");
+
+                reviews.add(new Review(author, content));
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem parsing reviews from JSON results", e);
+        } catch (IOException IOE) {
+            Log.e(LOG_TAG, "Problem with I/O", IOE);
+        }
+
+        //create rows for each review item
+        View tableRow;
+        if (!reviews.isEmpty()) {
+            //Create a new row for each video path
+            for (int i = 0; i < reviews.size(); i++) {
+                tableRow = View.inflate(getBaseContext(), R.layout.review_table_row, null);
+                TextView contentTextView = tableRow.findViewById(R.id.review_content_tv);
+                TextView authorTextView = tableRow.findViewById(R.id.review_author_tv);
+
+                //set text
+                contentTextView.setText(reviews.get(i).getContent());
+                authorTextView.setText("-" + reviews.get(i).getAuthor());
+
+                reviewTableLayout.addView(tableRow);
+            }
+        }
     }
 
     @Override
