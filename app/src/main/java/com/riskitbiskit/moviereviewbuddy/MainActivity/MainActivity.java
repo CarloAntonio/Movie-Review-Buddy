@@ -10,10 +10,13 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,13 +29,23 @@ import com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract.FavoritesEnt
 import com.riskitbiskit.moviereviewbuddy.DetailActivity.DetailsActivity;
 import com.riskitbiskit.moviereviewbuddy.R;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<Movie>> {
+public class MainActivity extends AppCompatActivity {
     //Testing
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
 
@@ -57,6 +70,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private boolean isFavoritesList = false;
     ArrayList<Movie> cursorToList;
 
+    //Test
+    OkHttpClient mOkHttpClient;
+    List<Movie> movies;
+
 
     //Possible future API path
     //public static final String NOW_PLAYING_PATH = "/movie/now_playing";
@@ -70,8 +87,15 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         //Bind views
         ButterKnife.bind(this);
 
-        //Initialize new Array List
-        cursorToList = new ArrayList<>();
+        //test
+        movies = new ArrayList<>();
+
+        if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
+
+            makeNetworkCall();
+        } else {
+            noInternetTV.setText(R.string.no_internet_connectivity);
+        }
 
         //Setup adapter
         mMovieArrayAdapter = new MovieArrayAdapter(this, R.layout.movie_poster_item, new ArrayList<Movie>());
@@ -169,10 +193,67 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             noInternetTV.setText("");
         } else {
             if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
-                getLoaderManager().initLoader(MOVIE_LOADER, null, this);
             } else {
                 noInternetTV.setText(R.string.no_internet_connectivity);
             }
+        }
+    }
+
+    private void makeNetworkCall() {
+        mOkHttpClient = new OkHttpClient();
+
+        Uri baseUri = Uri.parse(ROOT_URL + MOST_POPULAR_PATH);
+        Uri.Builder builder = baseUri.buildUpon();
+
+        builder.appendQueryParameter("api_key", API_KEY);
+        builder.appendQueryParameter("language", "en-US");
+
+        Request request = new Request.Builder()
+                .url(builder.toString())
+                .build();
+
+        mOkHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(LOG_TAG, "Error requesting data from server");
+            }
+
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        processResponse(response);
+                    }
+                });
+            }
+        });
+    }
+
+    private void processResponse(Response response) {
+        try {
+            String jsonResponse = response.body().string();
+            JSONObject rootObject = new JSONObject(jsonResponse);
+            JSONArray resultsArray = rootObject.getJSONArray("results");
+            for (int i = 0; i < resultsArray.length(); i++) {
+                JSONObject currentMovieObject = resultsArray.getJSONObject(i);
+
+                //extract data from current movie
+                String movieTitle = currentMovieObject.getString("original_title");
+                String movieOverview = currentMovieObject.getString("overview");
+                double movieRating = currentMovieObject.getDouble("vote_average");
+                String moviePosterPath = currentMovieObject.getString("poster_path");
+                String movieReleaseDate = currentMovieObject.getString("release_date");
+                long movieId = currentMovieObject.getLong("id");
+
+                movies.add(new Movie(movieTitle, movieOverview, movieRating, moviePosterPath, movieReleaseDate, movieId));
+            }
+
+            mMovieArrayAdapter.addAll(movies);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem parsing the movie JSON results", e);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -190,65 +271,31 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_popular) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString(PATH, MOST_POPULAR_PATH);
-            editor.apply();
-            getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
-            isFavoritesList = false;
-            return true;
-        } else if (id == R.id.action_top_rated) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString(PATH, TOP_RATED_PATH);
-            editor.apply();
-            getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
-            isFavoritesList = false;
-            return true;
-        } else if (id == R.id.action_favorites) {
-            getLoaderManager().restartLoader(MOVIE_LOADER, null, mLoaderCallbacks);
-            isFavoritesList = true;
-            noInternetTV.setText("");
-        }
+//        //noinspection SimplifiableIfStatement
+//        if (id == R.id.action_popular) {
+//            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+//            SharedPreferences.Editor editor = sharedPreferences.edit();
+//            editor.putString(PATH, MOST_POPULAR_PATH);
+//            editor.apply();
+//            getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+//            isFavoritesList = false;
+//            return true;
+//        } else if (id == R.id.action_top_rated) {
+//            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+//            SharedPreferences.Editor editor = sharedPreferences.edit();
+//            editor.putString(PATH, TOP_RATED_PATH);
+//            editor.apply();
+//            getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+//            isFavoritesList = false;
+//            return true;
+//        } else if (id == R.id.action_favorites) {
+//            getLoaderManager().restartLoader(MOVIE_LOADER, null, mLoaderCallbacks);
+//            isFavoritesList = true;
+//            noInternetTV.setText("");
+//        }
         return super.onOptionsItemSelected(item);
     }
 
-
-    @Override
-    public Loader<List<Movie>> onCreateLoader(int i, Bundle bundle) {
-
-        String queryPath = MOST_POPULAR_PATH;
-
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        if (sharedPreferences.contains(PATH)) {
-            queryPath = sharedPreferences.getString(PATH, MOST_POPULAR_PATH);
-        }
-
-        Uri baseUri = Uri.parse(ROOT_URL + queryPath);
-        Uri.Builder builder = baseUri.buildUpon();
-
-        builder.appendQueryParameter("api_key", API_KEY);
-        builder.appendQueryParameter("language", "en-US");
-
-        return new MovieLoader(this, builder.toString());
-    }
-
-    @Override
-    public void onLoadFinished(android.content.Loader<List<Movie>> loader, List<Movie> movies) {
-
-        mMovieArrayAdapter.clear();
-
-        if (movies != null && !movies.isEmpty()) {
-            mMovieArrayAdapter.addAll(movies);
-        }
-    }
-
-    @Override
-    public void onLoaderReset(android.content.Loader<List<Movie>> loader) {
-        mMovieArrayAdapter.clear();
-    }
 
 
     public NetworkInfo getActiveNetworkInfo() {
