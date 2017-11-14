@@ -44,8 +44,7 @@ import okhttp3.Response;
 
 import static com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract.*;
 
-public class DetailsActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<String>>,
-        View.OnClickListener{
+public class DetailsActivity extends AppCompatActivity implements View.OnClickListener{
 
     //Testing
     public static final String LOG_TAG = DetailsActivity.class.getSimpleName();
@@ -145,7 +144,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         }
 
         makeReviewNetworkCall();
-//        makePromoTrailerCall();
+        makePromoTrailerCall();
 
 
 
@@ -264,28 +263,89 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         };
 
         getLoaderManager().initLoader(BUTTON_LOADER, null, buttonCallback);
-        getLoaderManager().initLoader(PROMO_LOADER, null, this);
     }
 
-//    private void makePromoTrailerCall() {
-//        mOkHttpClient = new OkHttpClient();
-//
-//        Uri baseUri = Uri.parse(MainActivity.ROOT_URL + "/movie/" + movieId + "/videos");
-//        Uri.Builder builder = baseUri.buildUpon();
-//
-//        builder.appendQueryParameter("api_key", MainActivity.API_KEY);
-//        builder.appendQueryParameter("language", "en-US");
-//
-//        Request request = new Request.Builder()
-//                .url(builder.toString())
-//                .build();
-//
-//        mOkHttpClient
-//    }
+    private void makePromoTrailerCall() {
+
+        //Create full uri for promo
+        Uri baseUri = Uri.parse(MainActivity.ROOT_URL + "/movie/" + movieId + "/videos");
+        Uri.Builder builder = baseUri.buildUpon();
+
+        builder.appendQueryParameter("api_key", MainActivity.API_KEY);
+        builder.appendQueryParameter("language", "en-US");
+
+        //create request
+        Request request = new Request.Builder()
+                .url(builder.toString())
+                .build();
+
+        //make request call
+        mOkHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(LOG_TAG, "Error requesting trailer data from server");
+            }
+
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        processTrailerResponse(response);
+                    }
+                });
+            }
+        });
+    }
+
+    private void processTrailerResponse(Response response) {
+
+        //create new list of video paths
+        List<String> videoPaths = new ArrayList<>();
+
+        try {
+            String jsonResponse = response.body().string();
+
+            if (TextUtils.isEmpty(jsonResponse)) {
+                //TODO
+            }
+
+            JSONObject rootObject = new JSONObject(jsonResponse);
+            JSONArray resultsArray = rootObject.getJSONArray("results");
+            for (int i = 0; i < resultsArray.length(); i++) {
+                JSONObject currentMovieReview = resultsArray.getJSONObject(i);
+
+                String currentMoviePath = currentMovieReview.getString("key");
+
+                videoPaths.add(currentMoviePath);
+            }
+
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem parsing the promo video JSON results", e);
+        } catch (IOException IOE) {
+            Log.e(LOG_TAG, "Problem with I/O for trailer data", IOE);
+        }
+
+        View tableRow;
+
+        if (!videoPaths.isEmpty()) {
+            //Create a new row for each video path
+            for (int i = 0; i < videoPaths.size(); i++) {
+                tableRow = View.inflate(getBaseContext(), R.layout.trailer_table_row, null);
+                tableRow.setTag(videoPaths.get(i));
+                tableRow.setOnClickListener(this);
+                TextView textView = tableRow.findViewById(R.id.trailer_tv);
+                int trailerNumber = i + 1;
+                textView.setText("Play Movie Trailer " + trailerNumber);
+
+                trailerTableLayout.addView(tableRow);
+            }
+        }
+    }
 
     private void makeReviewNetworkCall() {
-        mOkHttpClient = new OkHttpClient();
 
+        //Create full uri for review
         Uri baseUri = Uri.parse(MainActivity.ROOT_URL + "/movie/" + movieId + "/reviews");
         Uri.Builder builder = baseUri.buildUpon();
 
@@ -293,10 +353,12 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         builder.appendQueryParameter("language", "en-US");
         builder.appendQueryParameter("page", "1");
 
+        //create request
         Request request = new Request.Builder()
                 .url(builder.toString())
                 .build();
 
+        //make request call
         mOkHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -362,39 +424,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                 reviewTableLayout.addView(tableRow);
             }
         }
-    }
-
-    @Override
-    public Loader<List<String>> onCreateLoader(int i, Bundle bundle) {
-        Uri baseUri = Uri.parse(MainActivity.ROOT_URL + "/movie/" + movieId + "/videos");
-        Uri.Builder builder = baseUri.buildUpon();
-
-        builder.appendQueryParameter("api_key", MainActivity.API_KEY);
-        builder.appendQueryParameter("language", "en-US");
-
-        return new VideoPathLoader(this, builder.toString());
-    }
-
-    @Override
-    public void onLoadFinished(Loader<List<String>> loader, List<String> videoPaths) {
-        View tableRow;
-        if (!videoPaths.isEmpty()) {
-            //Create a new row for each video path
-            for (int i = 0; i < videoPaths.size(); i++) {
-                tableRow = View.inflate(getBaseContext(), R.layout.trailer_table_row, null);
-                tableRow.setTag(videoPaths.get(i));
-                tableRow.setOnClickListener(this);
-                TextView textView = tableRow.findViewById(R.id.trailer_tv);
-                int trailerNumber = i + 1;
-                textView.setText("Play Movie Trailer " + trailerNumber);
-                trailerTableLayout.addView(tableRow);
-            }
-        }
-    }
-
-    @Override
-    public void onLoaderReset(Loader<List<String>> loader) {
-        trailerTableLayout.removeAllViews();
     }
 
     @Override
