@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
             if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
-                makeNetworkCall();
+                makeNetworkCall(MOST_POPULAR_PATH);
             } else {
                 noInternetTV.setText(R.string.no_internet_connectivity);
             }
@@ -208,10 +208,10 @@ public class MainActivity extends AppCompatActivity {
         return connectivityManager.getActiveNetworkInfo();
     }
 
-    private void makeNetworkCall() {
+    private void makeNetworkCall(String requestedPath) {
         mOkHttpClient = new OkHttpClient();
 
-        Uri baseUri = Uri.parse(ROOT_URL + MOST_POPULAR_PATH);
+        Uri baseUri = Uri.parse(ROOT_URL + requestedPath);
         Uri.Builder builder = baseUri.buildUpon();
 
         builder.appendQueryParameter("api_key", API_KEY);
@@ -241,6 +241,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void processResponse(Response response) {
         try {
+            //clean up old movie list
+            movies.clear();
+
             String jsonResponse = response.body().string();
             JSONObject rootObject = new JSONObject(jsonResponse);
             JSONArray resultsArray = rootObject.getJSONArray("results");
@@ -257,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
 
                 movies.add(new Movie(movieTitle, movieOverview, movieRating, moviePosterPath, movieReleaseDate, movieId));
             }
-
+            mMovieArrayAdapter.clear();
             mMovieArrayAdapter.addAll(movies);
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Problem parsing the movie JSON results", e);
@@ -280,28 +283,29 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_popular) {
-//            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-//            SharedPreferences.Editor editor = sharedPreferences.edit();
-//            editor.putString(PATH, MOST_POPULAR_PATH);
-//            editor.apply();
-//            getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
-//            isFavoritesList = false;
-//            return true;
-//        } else if (id == R.id.action_top_rated) {
-//            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-//            SharedPreferences.Editor editor = sharedPreferences.edit();
-//            editor.putString(PATH, TOP_RATED_PATH);
-//            editor.apply();
-//            getLoaderManager().restartLoader(MOVIE_LOADER, null, this);
-//            isFavoritesList = false;
-//            return true;
-//        } else if (id == R.id.action_favorites) {
-//            getLoaderManager().restartLoader(MOVIE_LOADER, null, mLoaderCallbacks);
-//            isFavoritesList = true;
-//            noInternetTV.setText("");
-//        }
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_popular) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(PATH, MOST_POPULAR_PATH);
+            editor.apply();
+            makeNetworkCall(MOST_POPULAR_PATH);
+            isFavoritesList = false;
+            return true;
+        } else if (id == R.id.action_top_rated) {
+            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(PATH, TOP_RATED_PATH);
+            editor.apply();
+            makeNetworkCall(TOP_RATED_PATH);
+            isFavoritesList = false;
+            return true;
+        } else if (id == R.id.action_favorites) {
+            getLoaderManager().restartLoader(MOVIE_LOADER, null, mLoaderCallbacks);
+            isFavoritesList = true;
+            noInternetTV.setText("");
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
