@@ -1,13 +1,14 @@
 package com.riskitbiskit.moviereviewbuddy.DetailActivity;
 
-import android.app.LoaderManager;
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.CursorLoader;
+import android.content.Context;
 import android.content.Intent;
-import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -44,7 +45,8 @@ import okhttp3.Response;
 
 import static com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract.*;
 
-public class DetailsActivity extends AppCompatActivity implements View.OnClickListener{
+public class DetailsActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
+        View.OnClickListener{
 
     //Testing
     public static final String LOG_TAG = DetailsActivity.class.getSimpleName();
@@ -87,6 +89,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
 
     //Test
     OkHttpClient mOkHttpClient;
+    Context mContext = this;
 
     //Loaders
     LoaderManager.LoaderCallbacks reviewLoaderCallback;
@@ -134,7 +137,7 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
             favesButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    getLoaderManager().initLoader(ADD_OR_DELETE_LOADER, null, addOrDeleteCallback);
+                    getSupportLoaderManager().initLoader(ADD_OR_DELETE_LOADER, null, (LoaderManager.LoaderCallbacks<Cursor>) mContext);
                 }
             });
 
@@ -146,83 +149,9 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         makeReviewNetworkCall();
         makePromoTrailerCall();
 
-
-
-        addOrDeleteCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
-            @Override
-            public Loader onCreateLoader(int i, Bundle bundle) {
-                String[] projection = {
-                        FavoritesEntry._ID,
-                        FavoritesEntry.COLUMN_MOVIE_API_ID
-                };
-
-                CursorLoader cursorLoader = new CursorLoader(getBaseContext(),
-                        FavoritesEntry.CONTENT_URI,
-                        projection,
-                        null,
-                        null,
-                        null);
-
-                return cursorLoader;
-            }
-
-            @Override
-            public void onLoadFinished(Loader loader, Cursor cursor) {
-                boolean isUnique = true;
-                int copyId = -1;
-
-                while (cursor.moveToNext()) {
-                    if (cursor.getLong(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_API_ID)) == movieId) {
-                        isUnique = false;
-                        copyId = cursor.getInt(cursor.getColumnIndex(FavoritesEntry._ID));
-                    }
-                }
-
-                if (isUnique) {
-                    ContentValues values = new ContentValues();
-                    values.put(FavoritesEntry.COLUMN_MOVIE_TITLE, movieName);
-                    values.put(FavoritesEntry.COLUMN_MOVIE_OVERVIEW, movieOverview);
-                    values.put(FavoritesEntry.COLUMN_MOVIE_RATING, movieRating);
-                    values.put(FavoritesEntry.COLUMN_MOVIE_POSTER, moviePosterPath);
-                    values.put(FavoritesEntry.COLUMN_MOVIE_RELEASE_DATE, movieReleaseDate);
-                    values.put(FavoritesEntry.COLUMN_MOVIE_API_ID, movieId);
-
-                    Uri addFaveUri = getContentResolver().insert(FavoritesEntry.CONTENT_URI, values);
-                    // Show a toast message depending on whether or not the insertion was successful
-                    if (addFaveUri == null) {
-                        // If the new content URI is null, then there was an error with insertion.
-                        Toast.makeText(getBaseContext(), "Error saving movie to favorites", Toast.LENGTH_SHORT).show();
-                    } else {
-                        // Otherwise, the insertion was successful and we can display a toast.
-                        Toast.makeText(getBaseContext(), "Movie added to favorites", Toast.LENGTH_SHORT).show();
-                    }
-                    finish();
-                } else {
-                    Uri selectedFaveUri = ContentUris.withAppendedId(FavoritesEntry.CONTENT_URI, copyId);
-                    int rowsDeleted = getContentResolver().delete(
-                            selectedFaveUri,
-                            null,
-                            null
-                    );
-
-                    if (rowsDeleted > 0) {
-                        Toast.makeText(getBaseContext(), "Movie Deleted From Favorites", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getBaseContext(), "Error Deleting Movie From Favorites", Toast.LENGTH_SHORT).show();
-                    }
-                    finish();
-                }
-            }
-
-            @Override
-            public void onLoaderReset(Loader loader) {
-
-            }
-        };
-
         buttonCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
             @Override
-            public Loader onCreateLoader(int i, Bundle bundle) {
+            public Loader onCreateLoader(int id, Bundle args) {
                 String[] projection = {
                         FavoritesEntry._ID,
                         FavoritesEntry.COLUMN_MOVIE_API_ID
@@ -240,7 +169,6 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
 
             @Override
             public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-
                 boolean isUnique = true;
 
                 while (cursor.moveToNext()) {
@@ -255,14 +183,12 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
                 }
             }
 
-
             @Override
             public void onLoaderReset(Loader loader) {
 
             }
         };
-
-        getLoaderManager().initLoader(BUTTON_LOADER, null, buttonCallback);
+        getSupportLoaderManager().initLoader(BUTTON_LOADER, null, buttonCallback);
     }
 
     private void makePromoTrailerCall() {
@@ -432,5 +358,75 @@ public class DetailsActivity extends AppCompatActivity implements View.OnClickLi
         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=" + identifier)));
         trailerTableLayout.removeAllViews();
         reviewTableLayout.removeAllViews();
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String[] projection = {
+                FavoritesEntry._ID,
+                FavoritesEntry.COLUMN_MOVIE_API_ID
+        };
+
+        CursorLoader cursorLoader = new CursorLoader(getBaseContext(),
+                FavoritesEntry.CONTENT_URI,
+                projection,
+                null,
+                null,
+                null);
+
+        return cursorLoader;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        boolean isUnique = true;
+        int copyId = -1;
+
+        while (cursor.moveToNext()) {
+            if (cursor.getLong(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_API_ID)) == movieId) {
+                isUnique = false;
+                copyId = cursor.getInt(cursor.getColumnIndex(FavoritesEntry._ID));
+            }
+        }
+
+        if (isUnique) {
+            ContentValues values = new ContentValues();
+            values.put(FavoritesEntry.COLUMN_MOVIE_TITLE, movieName);
+            values.put(FavoritesEntry.COLUMN_MOVIE_OVERVIEW, movieOverview);
+            values.put(FavoritesEntry.COLUMN_MOVIE_RATING, movieRating);
+            values.put(FavoritesEntry.COLUMN_MOVIE_POSTER, moviePosterPath);
+            values.put(FavoritesEntry.COLUMN_MOVIE_RELEASE_DATE, movieReleaseDate);
+            values.put(FavoritesEntry.COLUMN_MOVIE_API_ID, movieId);
+
+            Uri addFaveUri = getContentResolver().insert(FavoritesEntry.CONTENT_URI, values);
+            // Show a toast message depending on whether or not the insertion was successful
+            if (addFaveUri == null) {
+                // If the new content URI is null, then there was an error with insertion.
+                Toast.makeText(getBaseContext(), "Error saving movie to favorites", Toast.LENGTH_SHORT).show();
+            } else {
+                // Otherwise, the insertion was successful and we can display a toast.
+                Toast.makeText(getBaseContext(), "Movie added to favorites", Toast.LENGTH_SHORT).show();
+            }
+            finish();
+        } else {
+            Uri selectedFaveUri = ContentUris.withAppendedId(FavoritesEntry.CONTENT_URI, copyId);
+            int rowsDeleted = getContentResolver().delete(
+                    selectedFaveUri,
+                    null,
+                    null
+            );
+
+            if (rowsDeleted > 0) {
+                Toast.makeText(getBaseContext(), "Movie Deleted From Favorites", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getBaseContext(), "Error Deleting Movie From Favorites", Toast.LENGTH_SHORT).show();
+            }
+            finish();
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
     }
 }
