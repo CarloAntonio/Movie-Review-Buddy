@@ -41,7 +41,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
-    
+
     //Testing
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
 

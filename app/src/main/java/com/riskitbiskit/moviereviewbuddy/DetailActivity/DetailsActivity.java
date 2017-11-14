@@ -39,6 +39,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     public static final int REVIEW_LOADER = 1;
     public static final int ADD_OR_DELETE_LOADER = 2;
     public static final int BUTTON_LOADER = 3;
+    public static final String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/w500/";
 
     //Variables
     private int movieDatabaseId;
@@ -48,20 +49,25 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private String moviePosterPath;
     private String movieReleaseDate;
     private long movieId;
+    String movieRatingAsString;
 
-    //Fields
+    //Views
     @BindView(R.id.loading_error)
     RelativeLayout relativeLayout;
     @BindView(R.id.title_tv)
     TextView titleTV;
-    @BindView(R.id.overview_tv) TextView overviewTV;
-    @BindView(R.id.rating_tv) TextView ratingTV;
+    @BindView(R.id.overview_tv)
+    TextView overviewTV;
+    @BindView(R.id.rating_tv)
+    TextView ratingTV;
     @BindView(R.id.poster_iv)
     ImageView posterIV;
-    @BindView(R.id.release_tv) TextView releaseTV;
+    @BindView(R.id.release_tv)
+    TextView releaseTV;
     @BindView(R.id.trailers_table_layout)
     TableLayout trailerTableLayout;
-    @BindView(R.id.review_table_layout) TableLayout reviewTableLayout;
+    @BindView(R.id.review_table_layout)
+    TableLayout reviewTableLayout;
     @BindView(R.id.add_to_faves_button)
     Button favesButton;
 
@@ -74,13 +80,12 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
-
-        //Bind views
         ButterKnife.bind(this);
 
         //Get intent details
         Intent intent = getIntent();
-        if (intent != null && intent.hasExtra(Movie.MOVIE_NAME)
+        if (intent != null
+                && intent.hasExtra(Movie.MOVIE_NAME)
                 && intent.hasExtra(Movie.MOVIE_OVERVIEW) && intent.hasExtra(Movie.MOVIE_RATING)
                 && intent.hasExtra(Movie.MOVIE_POSTER_PATH) && intent.hasExtra(Movie.MOVIE_RELEASE_DATE)
                 && intent.hasExtra(Movie.MOVIE_ID)) {
@@ -90,20 +95,19 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             movieName = intent.getStringExtra(Movie.MOVIE_NAME);
             movieOverview = intent.getStringExtra(Movie.MOVIE_OVERVIEW);
             movieRating = intent.getDoubleExtra(Movie.MOVIE_RATING, 0.0);
-            final String stringRating = String.valueOf(movieRating);
+            movieRatingAsString = String.valueOf(movieRating);
             moviePosterPath = intent.getStringExtra(Movie.MOVIE_POSTER_PATH);
             movieReleaseDate = intent.getStringExtra(Movie.MOVIE_RELEASE_DATE);
             movieId = intent.getLongExtra(Movie.MOVIE_ID, 0);
 
-            //Set Views
+            //Set views
             titleTV.setText(movieName);
             overviewTV.setText(movieOverview);
-            ratingTV.setText(stringRating);
+            ratingTV.setText(movieRatingAsString);
             releaseTV.setText(movieReleaseDate);
 
-            //Picasso image
-            String baseUrl = "http://image.tmdb.org/t/p/w500/";
-            String fullUrl = baseUrl + moviePosterPath;
+            //Set image to view
+            String fullUrl = BASE_IMAGE_URL + moviePosterPath;
             Picasso.with(this).load(fullUrl).into(posterIV);
 
             //Locate favorites button
