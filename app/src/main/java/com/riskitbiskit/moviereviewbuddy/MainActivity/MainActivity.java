@@ -137,6 +137,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         isFavoritesList = savedInstanceState.getBoolean(FAVE_LIST_BOOLEAN);
         //pull list from saved instance state
         movies = savedInstanceState.getParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY);
+        //clean and add new movies to adapter
+        refreshAdapter();
+    }
+
+    private void refreshAdapter() {
         //clean up old data from array adapter
         mMovieArrayAdapter.clear();
         //add saved data to array adapter
@@ -185,6 +190,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             //clean up old movie list
             movies.clear();
 
+            //parse through json response
             String jsonResponse = response.body().string();
             JSONObject rootObject = new JSONObject(jsonResponse);
             JSONArray resultsArray = rootObject.getJSONArray("results");
@@ -199,14 +205,17 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 String movieReleaseDate = currentMovieObject.getString("release_date");
                 long movieId = currentMovieObject.getLong("id");
 
+                //add to list of movies
                 movies.add(new Movie(movieTitle, movieOverview, movieRating, moviePosterPath, movieReleaseDate, movieId));
             }
-            mMovieArrayAdapter.clear();
-            mMovieArrayAdapter.addAll(movies);
+
+            //clean and add new movies to adapter
+            refreshAdapter();
+
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Problem parsing the movie JSON results", e);
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(LOG_TAG, "Problem with I/O", e);
         }
     }
 
@@ -278,18 +287,21 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         movies.clear();
 
         while (cursor.moveToNext()) {
+
+            //extract data from cursor
             String cursorTitle = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_TITLE));
             String cursorOverview = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_OVERVIEW));
             double cursorRating = cursor.getDouble(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_RATING));
             String cursorPoster = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_POSTER));
             String cursorReleaseDate = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_RELEASE_DATE));
             long cursorId = cursor.getLong(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_API_ID));
+
+            //add to list of movies
             movies.add(new Movie(cursorTitle, cursorOverview, cursorRating, cursorPoster, cursorReleaseDate, cursorId));
         }
 
-        mMovieArrayAdapter.clear();
-
-        mMovieArrayAdapter.addAll(movies);
+        //clean and add new movies to adapter
+        refreshAdapter();
     }
 
     @Override
