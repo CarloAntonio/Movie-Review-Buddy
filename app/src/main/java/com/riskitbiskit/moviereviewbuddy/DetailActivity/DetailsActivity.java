@@ -21,7 +21,6 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract;
 import com.riskitbiskit.moviereviewbuddy.MainActivity.MainActivity;
 import com.riskitbiskit.moviereviewbuddy.MainActivity.Movie;
 import com.riskitbiskit.moviereviewbuddy.R;
@@ -66,6 +65,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private String moviePosterPath;
     private String movieReleaseDate;
     private long movieId;
+    OkHttpClient mOkHttpClient;
+    Context mContext = this;
 
     //Views
     @BindView(R.id.loading_error)
@@ -87,13 +88,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     @BindView(R.id.add_to_faves_button)
     Button favesButton;
 
-    //Test
-    OkHttpClient mOkHttpClient;
-    Context mContext = this;
-
     //Loaders
-    LoaderManager.LoaderCallbacks reviewLoaderCallback;
-    LoaderManager.LoaderCallbacks addOrDeleteCallback;
     LoaderManager.LoaderCallbacks buttonCallback;
 
     @Override
@@ -147,126 +142,12 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         }
 
         makeReviewNetworkCall();
+
         makePromoTrailerCall();
 
-        buttonCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
-            @Override
-            public Loader onCreateLoader(int id, Bundle args) {
-                String[] projection = {
-                        FavoritesEntry._ID,
-                        FavoritesEntry.COLUMN_MOVIE_API_ID
-                };
+        createButtonCallback();
 
-                CursorLoader cursorLoader = new CursorLoader(getBaseContext(),
-                        FavoritesEntry.CONTENT_URI,
-                        projection,
-                        null,
-                        null,
-                        null);
-
-                return cursorLoader;
-            }
-
-            @Override
-            public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-                boolean isUnique = true;
-
-                while (cursor.moveToNext()) {
-                    if (cursor.getLong(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_API_ID)) == movieId) {
-                        isUnique = false;
-                    }
-                }
-
-                if (!isUnique) {
-                    Button favesButton = (Button) findViewById(R.id.add_to_faves_button);
-                    favesButton.setText("Unfavorite");
-                }
-            }
-
-            @Override
-            public void onLoaderReset(Loader loader) {
-
-            }
-        };
         getSupportLoaderManager().initLoader(BUTTON_LOADER, null, buttonCallback);
-    }
-
-    private void makePromoTrailerCall() {
-
-        //Create full uri for promo
-        Uri baseUri = Uri.parse(MainActivity.ROOT_URL + "/movie/" + movieId + "/videos");
-        Uri.Builder builder = baseUri.buildUpon();
-
-        builder.appendQueryParameter("api_key", MainActivity.API_KEY);
-        builder.appendQueryParameter("language", "en-US");
-
-        //create request
-        Request request = new Request.Builder()
-                .url(builder.toString())
-                .build();
-
-        //make request call
-        mOkHttpClient.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.e(LOG_TAG, "Error requesting trailer data from server");
-            }
-
-            @Override
-            public void onResponse(Call call, final Response response) throws IOException {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        processTrailerResponse(response);
-                    }
-                });
-            }
-        });
-    }
-
-    private void processTrailerResponse(Response response) {
-
-        //create new list of video paths
-        List<String> videoPaths = new ArrayList<>();
-
-        try {
-            String jsonResponse = response.body().string();
-
-            if (TextUtils.isEmpty(jsonResponse)) {
-                //TODO
-            }
-
-            JSONObject rootObject = new JSONObject(jsonResponse);
-            JSONArray resultsArray = rootObject.getJSONArray("results");
-            for (int i = 0; i < resultsArray.length(); i++) {
-                JSONObject currentMovieReview = resultsArray.getJSONObject(i);
-
-                String currentMoviePath = currentMovieReview.getString("key");
-
-                videoPaths.add(currentMoviePath);
-            }
-
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "Problem parsing the promo video JSON results", e);
-        } catch (IOException IOE) {
-            Log.e(LOG_TAG, "Problem with I/O for trailer data", IOE);
-        }
-
-        View tableRow;
-
-        if (!videoPaths.isEmpty()) {
-            //Create a new row for each video path
-            for (int i = 0; i < videoPaths.size(); i++) {
-                tableRow = View.inflate(getBaseContext(), R.layout.trailer_table_row, null);
-                tableRow.setTag(videoPaths.get(i));
-                tableRow.setOnClickListener(this);
-                TextView textView = tableRow.findViewById(R.id.trailer_tv);
-                int trailerNumber = i + 1;
-                textView.setText("Play Movie Trailer " + trailerNumber);
-
-                trailerTableLayout.addView(tableRow);
-            }
-        }
     }
 
     private void makeReviewNetworkCall() {
@@ -352,12 +233,124 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         }
     }
 
-    @Override
-    public void onClick(View view) {
-        String identifier = (String) view.getTag();
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=" + identifier)));
-        trailerTableLayout.removeAllViews();
-        reviewTableLayout.removeAllViews();
+    private void makePromoTrailerCall() {
+
+        //Create full uri for promo
+        Uri baseUri = Uri.parse(MainActivity.ROOT_URL + "/movie/" + movieId + "/videos");
+        Uri.Builder builder = baseUri.buildUpon();
+
+        builder.appendQueryParameter("api_key", MainActivity.API_KEY);
+        builder.appendQueryParameter("language", "en-US");
+
+        //create request
+        Request request = new Request.Builder()
+                .url(builder.toString())
+                .build();
+
+        //make request call
+        mOkHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(LOG_TAG, "Error requesting trailer data from server");
+            }
+
+            @Override
+            public void onResponse(Call call, final Response response) throws IOException {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        processTrailerResponse(response);
+                    }
+                });
+            }
+        });
+    }
+
+    private void processTrailerResponse(Response response) {
+
+        //create new list of video paths
+        List<String> videoPaths = new ArrayList<>();
+
+        try {
+            String jsonResponse = response.body().string();
+
+            if (TextUtils.isEmpty(jsonResponse)) {
+                //TODO
+            }
+
+            JSONObject rootObject = new JSONObject(jsonResponse);
+            JSONArray resultsArray = rootObject.getJSONArray("results");
+            for (int i = 0; i < resultsArray.length(); i++) {
+                JSONObject currentMovieReview = resultsArray.getJSONObject(i);
+
+                String currentMoviePath = currentMovieReview.getString("key");
+
+                videoPaths.add(currentMoviePath);
+            }
+
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem parsing the promo video JSON results", e);
+        } catch (IOException IOE) {
+            Log.e(LOG_TAG, "Problem with I/O for trailer data", IOE);
+        }
+
+        View tableRow;
+
+        if (!videoPaths.isEmpty()) {
+            //Create a new row for each video path
+            for (int i = 0; i < videoPaths.size(); i++) {
+                tableRow = View.inflate(getBaseContext(), R.layout.trailer_table_row, null);
+                tableRow.setTag(videoPaths.get(i));
+                tableRow.setOnClickListener(this);
+                TextView textView = tableRow.findViewById(R.id.trailer_tv);
+                int trailerNumber = i + 1;
+                textView.setText("Play Movie Trailer " + trailerNumber);
+
+                trailerTableLayout.addView(tableRow);
+            }
+        }
+    }
+
+    private void createButtonCallback() {
+        buttonCallback = new LoaderManager.LoaderCallbacks<Cursor>() {
+            @Override
+            public Loader onCreateLoader(int id, Bundle args) {
+                String[] projection = {
+                        FavoritesEntry._ID,
+                        FavoritesEntry.COLUMN_MOVIE_API_ID
+                };
+
+                CursorLoader cursorLoader = new CursorLoader(getBaseContext(),
+                        FavoritesEntry.CONTENT_URI,
+                        projection,
+                        null,
+                        null,
+                        null);
+
+                return cursorLoader;
+            }
+
+            @Override
+            public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+                boolean isUnique = true;
+
+                while (cursor.moveToNext()) {
+                    if (cursor.getLong(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_API_ID)) == movieId) {
+                        isUnique = false;
+                    }
+                }
+
+                if (!isUnique) {
+                    Button favesButton = (Button) findViewById(R.id.add_to_faves_button);
+                    favesButton.setText("Unfavorite");
+                }
+            }
+
+            @Override
+            public void onLoaderReset(Loader loader) {
+
+            }
+        };
     }
 
     @Override
@@ -427,6 +420,14 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+        //Empty
+    }
 
+    @Override
+    public void onClick(View view) {
+        String identifier = (String) view.getTag();
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=" + identifier)));
+        trailerTableLayout.removeAllViews();
+        reviewTableLayout.removeAllViews();
     }
 }
