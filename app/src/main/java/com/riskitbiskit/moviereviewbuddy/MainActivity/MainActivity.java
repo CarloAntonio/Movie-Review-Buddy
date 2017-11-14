@@ -1,19 +1,17 @@
 package com.riskitbiskit.moviereviewbuddy.MainActivity;
 
-import android.app.LoaderManager;
 import android.content.Context;
-import android.content.CursorLoader;
 import android.content.Intent;
-import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -46,7 +44,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
     //Testing
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
 
@@ -68,7 +66,6 @@ public class MainActivity extends AppCompatActivity {
     GridView moviesGridView;
 
     private MovieArrayAdapter mMovieArrayAdapter;
-    private LoaderManager.LoaderCallbacks<Cursor> mLoaderCallbacks;
     private boolean isFavoritesList = false;
     ArrayList<Movie> cursorToList;
 
@@ -95,12 +92,20 @@ public class MainActivity extends AppCompatActivity {
             extractInstanceState(savedInstanceState);
 
         } else {
-            if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
-                makeNetworkCall(MOST_POPULAR_PATH);
+            // if/else statement allows favorite page to be viewed outside of a network
+            if (isFavoritesList) {
+                getSupportLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+                noInternetTV.setText("");
             } else {
-                noInternetTV.setText(R.string.no_internet_connectivity);
+                if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
+                    makeNetworkCall(MOST_POPULAR_PATH);
+                } else {
+                    noInternetTV.setText(R.string.no_internet_connectivity);
+                }
             }
         }
+
+
 
         moviesGridView.setAdapter(mMovieArrayAdapter);
 
@@ -131,65 +136,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
-        mLoaderCallbacks = new LoaderManager.LoaderCallbacks<Cursor>() {
-            @Override
-            public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-                String[] projection = {
-                        FavoritesEntry._ID,
-                        FavoritesEntry.COLUMN_MOVIE_TITLE,
-                        FavoritesEntry.COLUMN_MOVIE_OVERVIEW,
-                        FavoritesEntry.COLUMN_MOVIE_RATING,
-                        FavoritesEntry.COLUMN_MOVIE_POSTER,
-                        FavoritesEntry.COLUMN_MOVIE_RELEASE_DATE,
-                        FavoritesEntry.COLUMN_MOVIE_API_ID
-                };
-
-                CursorLoader cursorLoader = new CursorLoader(getBaseContext(),
-                        FavoritesEntry.CONTENT_URI,
-                        projection,
-                        null,
-                        null,
-                        null);
-
-                return cursorLoader;
-            }
-
-            @Override
-            public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-
-                cursorToList.clear();
-
-                while (cursor.moveToNext()) {
-                    String cursorTitle = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_TITLE));
-                    String cursorOverview = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_OVERVIEW));
-                    double cursorRating = cursor.getDouble(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_RATING));
-                    String cursorPoster = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_POSTER));
-                    String cursorReleaseDate = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_RELEASE_DATE));
-                    long cursorId = cursor.getLong(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_API_ID));
-                    cursorToList.add(new Movie(cursorTitle, cursorOverview, cursorRating, cursorPoster, cursorReleaseDate, cursorId));
-                }
-
-                mMovieArrayAdapter.clear();
-
-                mMovieArrayAdapter.addAll(cursorToList);
-            }
-
-            @Override
-            public void onLoaderReset(Loader<Cursor> loader) {
-                mMovieArrayAdapter.clear();
-            }
-        };
-
-        if (isFavoritesList) {
-            getLoaderManager().restartLoader(MOVIE_LOADER, null, mLoaderCallbacks);
-            noInternetTV.setText("");
-        } else {
-            if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
-            } else {
-                noInternetTV.setText(R.string.no_internet_connectivity);
-            }
-        }
     }
 
     private void extractInstanceState(Bundle savedInstanceState) {
@@ -278,30 +224,20 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        // identify specific menu item click
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
+        // handle action bar item clicks
         if (id == R.id.action_popular) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString(PATH, MOST_POPULAR_PATH);
-            editor.apply();
             makeNetworkCall(MOST_POPULAR_PATH);
             isFavoritesList = false;
             return true;
         } else if (id == R.id.action_top_rated) {
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putString(PATH, TOP_RATED_PATH);
-            editor.apply();
             makeNetworkCall(TOP_RATED_PATH);
             isFavoritesList = false;
             return true;
         } else if (id == R.id.action_favorites) {
-            getLoaderManager().restartLoader(MOVIE_LOADER, null, mLoaderCallbacks);
+            getSupportLoaderManager().restartLoader(MOVIE_LOADER, null, this);
             isFavoritesList = true;
             noInternetTV.setText("");
         }
@@ -325,7 +261,53 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         if (isFavoritesList) {
-            getLoaderManager().restartLoader(MOVIE_LOADER, null, mLoaderCallbacks);
+            getSupportLoaderManager().restartLoader(MOVIE_LOADER, null, this);
         }
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        String[] projection = {
+                FavoritesEntry._ID,
+                FavoritesEntry.COLUMN_MOVIE_TITLE,
+                FavoritesEntry.COLUMN_MOVIE_OVERVIEW,
+                FavoritesEntry.COLUMN_MOVIE_RATING,
+                FavoritesEntry.COLUMN_MOVIE_POSTER,
+                FavoritesEntry.COLUMN_MOVIE_RELEASE_DATE,
+                FavoritesEntry.COLUMN_MOVIE_API_ID
+        };
+
+        CursorLoader cursorLoader = new CursorLoader(getBaseContext(),
+                FavoritesEntry.CONTENT_URI,
+                projection,
+                null,
+                null,
+                null);
+
+        return cursorLoader;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        movies.clear();
+
+        while (cursor.moveToNext()) {
+            String cursorTitle = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_TITLE));
+            String cursorOverview = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_OVERVIEW));
+            double cursorRating = cursor.getDouble(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_RATING));
+            String cursorPoster = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_POSTER));
+            String cursorReleaseDate = cursor.getString(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_RELEASE_DATE));
+            long cursorId = cursor.getLong(cursor.getColumnIndex(FavoritesEntry.COLUMN_MOVIE_API_ID));
+            movies.add(new Movie(cursorTitle, cursorOverview, cursorRating, cursorPoster, cursorReleaseDate, cursorId));
+        }
+
+        mMovieArrayAdapter.clear();
+
+        mMovieArrayAdapter.addAll(movies);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mMovieArrayAdapter.clear();
     }
 }
