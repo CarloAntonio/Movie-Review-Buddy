@@ -27,6 +27,7 @@ Main Screen + Menu (Landscape) </br>
 ### Libraries Used
 * Picasso
 * Glide
+* OkHttp3
 * Android Support
 	* AppCompat, Constraint, Design
 
