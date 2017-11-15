@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 intent.putExtra(Movie.MOVIE_RELEASE_DATE, releaseDate);
                 intent.putExtra(Movie.MOVIE_ID, id);
 
-                //Start activity
+                //Start activity for result
                 startActivity(intent);
             }
         });
@@ -241,11 +241,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             isFavoritesList = true;
             noInternetTV.setText("");
         }
-
         return super.onOptionsItemSelected(item);
     }
 
-
+    //save relevant data
     @Override
     protected void onSaveInstanceState(Bundle outState) {
 
@@ -305,5 +304,14 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mMovieArrayAdapter.clear();
+    }
+
+    //reloads favorites list if any changes were made
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (isFavoritesList) {
+            getSupportLoaderManager().restartLoader(MOVIE_LOADER, null, this);
+        }
     }
 }

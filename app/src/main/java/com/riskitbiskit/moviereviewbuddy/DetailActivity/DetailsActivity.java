@@ -22,7 +22,6 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
 import com.riskitbiskit.moviereviewbuddy.MainActivity.MainActivity;
 import com.riskitbiskit.moviereviewbuddy.MainActivity.Movie;
 import com.riskitbiskit.moviereviewbuddy.R;
@@ -434,6 +433,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                 // Otherwise, the insertion was successful and we can display a toast.
                 Toast.makeText(getBaseContext(), "Movie added to favorites", Toast.LENGTH_SHORT).show();
             }
+
             finish();
         } else {
             Uri selectedFaveUri = ContentUris.withAppendedId(FavoritesEntry.CONTENT_URI, copyId);
@@ -448,6 +448,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             } else {
                 Toast.makeText(getBaseContext(), "Error Deleting Movie From Favorites", Toast.LENGTH_SHORT).show();
             }
+
             finish();
         }
     }
