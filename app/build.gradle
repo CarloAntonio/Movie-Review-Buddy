@@ -36,5 +36,7 @@ dependencies {
     //Picasso, Image Loading Library
     compile 'com.squareup.picasso:picasso:2.5.2'
 
+    //OkHttp3, Networking Library
     compile 'com.squareup.okhttp3:okhttp:3.9.0'
+    
 }

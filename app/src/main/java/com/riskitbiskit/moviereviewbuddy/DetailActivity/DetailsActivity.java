@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Parcelable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -21,6 +22,7 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.riskitbiskit.moviereviewbuddy.MainActivity.MainActivity;
 import com.riskitbiskit.moviereviewbuddy.MainActivity.Movie;
 import com.riskitbiskit.moviereviewbuddy.R;
@@ -56,6 +58,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     public static final int ADD_OR_DELETE_LOADER = 2;
     public static final int BUTTON_LOADER = 3;
     public static final String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/w500/";
+    public static final String REVIEW_SAVE_INS_KEY = "review_key";
+    public static final String TRAILER_SAVE_INS_KEY = "trailer_key";
 
     //Variables
     private int movieDatabaseId;
@@ -67,6 +71,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private long movieId;
     OkHttpClient mOkHttpClient;
     Context mContext = this;
+    List<Review> mReviews;
+    List<String> mVideoPaths;
 
     //Views
     @BindView(R.id.loading_error)
@@ -141,9 +147,30 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             relativeLayout.setVisibility(View.VISIBLE);
         }
 
-        makeReviewNetworkCall();
+        //Prevent unnecessary network calls
+        if (savedInstanceState != null) {
+            //check if review data was previously saved
+            if (savedInstanceState.containsKey(REVIEW_SAVE_INS_KEY)) {
+                mReviews = savedInstanceState.getParcelableArrayList(REVIEW_SAVE_INS_KEY);
+                createReviewRows();
+            } else {
+                //no previous review data therefore, make a network call
+                makeReviewNetworkCall();
+            }
 
-        makePromoTrailerCall();
+            if (savedInstanceState.containsKey(TRAILER_SAVE_INS_KEY)) {
+                mVideoPaths = savedInstanceState.getStringArrayList(TRAILER_SAVE_INS_KEY);
+                createTrailerRows();
+            } else {
+                //no previous trailer data therefore, make a network call
+                makePromoTrailerCall();
+            }
+
+        //no previous review or trailer data therefore, make a network call
+        } else {
+            makeReviewNetworkCall();
+            makePromoTrailerCall();
+        }
 
         createButtonCallback();
 
@@ -187,7 +214,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private void processReviewResponse(Response response) {
 
         //create a new list of reviews
-        List<Review> reviews = new ArrayList<>();
+        mReviews = new ArrayList<>();
 
         //process response
         try {
@@ -207,7 +234,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                 String author = currentMovieReview.getString("author");
                 String content = currentMovieReview.getString("content");
 
-                reviews.add(new Review(author, content));
+                mReviews.add(new Review(author, content));
             }
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Problem parsing reviews from JSON results", e);
@@ -216,17 +243,21 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         }
 
         //create rows for each review item
+        createReviewRows();
+    }
+
+    private void createReviewRows() {
         View tableRow;
-        if (!reviews.isEmpty()) {
+        if (!mReviews.isEmpty()) {
             //Create a new row for each video path
-            for (int i = 0; i < reviews.size(); i++) {
+            for (int i = 0; i < mReviews.size(); i++) {
                 tableRow = View.inflate(getBaseContext(), R.layout.review_table_row, null);
                 TextView contentTextView = tableRow.findViewById(R.id.review_content_tv);
                 TextView authorTextView = tableRow.findViewById(R.id.review_author_tv);
 
                 //set text
-                contentTextView.setText(reviews.get(i).getContent());
-                authorTextView.setText("-" + reviews.get(i).getAuthor());
+                contentTextView.setText(mReviews.get(i).getContent());
+                authorTextView.setText("-" + mReviews.get(i).getAuthor());
 
                 reviewTableLayout.addView(tableRow);
             }
@@ -269,7 +300,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     private void processTrailerResponse(Response response) {
 
         //create new list of video paths
-        List<String> videoPaths = new ArrayList<>();
+        mVideoPaths = new ArrayList<>();
 
         try {
             String jsonResponse = response.body().string();
@@ -285,7 +316,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
                 String currentMoviePath = currentMovieReview.getString("key");
 
-                videoPaths.add(currentMoviePath);
+                mVideoPaths.add(currentMoviePath);
             }
 
         } catch (JSONException e) {
@@ -294,13 +325,16 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             Log.e(LOG_TAG, "Problem with I/O for trailer data", IOE);
         }
 
-        View tableRow;
+        createTrailerRows();
+    }
 
-        if (!videoPaths.isEmpty()) {
+    private void createTrailerRows() {
+        View tableRow;
+        if (!mVideoPaths.isEmpty()) {
             //Create a new row for each video path
-            for (int i = 0; i < videoPaths.size(); i++) {
+            for (int i = 0; i < mVideoPaths.size(); i++) {
                 tableRow = View.inflate(getBaseContext(), R.layout.trailer_table_row, null);
-                tableRow.setTag(videoPaths.get(i));
+                tableRow.setTag(mVideoPaths.get(i));
                 tableRow.setOnClickListener(this);
                 TextView textView = tableRow.findViewById(R.id.trailer_tv);
                 int trailerNumber = i + 1;
@@ -429,5 +463,16 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=" + identifier)));
         trailerTableLayout.removeAllViews();
         reviewTableLayout.removeAllViews();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        //save review data
+        outState.putParcelableArrayList(REVIEW_SAVE_INS_KEY, (ArrayList<? extends Parcelable>) mReviews);
+
+        //save trailer data
+        outState.putStringArrayList(TRAILER_SAVE_INS_KEY, (ArrayList<String>) mVideoPaths);
+
+        super.onSaveInstanceState(outState);
     }
 }
