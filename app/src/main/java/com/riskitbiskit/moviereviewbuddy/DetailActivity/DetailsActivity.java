@@ -220,10 +220,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             //transform response to string form
             String jsonResponse = response.body().string();
 
-            if (TextUtils.isEmpty(jsonResponse)) {
-                Log.e(LOG_TAG, "JSON response is empty");
-            }
-
             //parse through json response
             JSONObject rootObject = new JSONObject(jsonResponse);
             JSONArray resultsArray = rootObject.getJSONArray("results");
@@ -303,10 +299,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         try {
             String jsonResponse = response.body().string();
-
-            if (TextUtils.isEmpty(jsonResponse)) {
-                Log.e(LOG_TAG, "JSON response is empty");
-            }
 
             JSONObject rootObject = new JSONObject(jsonResponse);
             JSONArray resultsArray = rootObject.getJSONArray("results");
