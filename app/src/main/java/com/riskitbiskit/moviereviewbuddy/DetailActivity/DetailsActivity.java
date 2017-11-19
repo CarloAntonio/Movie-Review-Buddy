@@ -221,7 +221,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             String jsonResponse = response.body().string();
 
             if (TextUtils.isEmpty(jsonResponse)) {
-                //TODO
+                Log.e(LOG_TAG, "JSON response is empty");
             }
 
             //parse through json response
@@ -305,7 +305,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             String jsonResponse = response.body().string();
 
             if (TextUtils.isEmpty(jsonResponse)) {
-                //TODO
+                Log.e(LOG_TAG, "JSON response is empty");
             }
 
             JSONObject rootObject = new JSONObject(jsonResponse);
