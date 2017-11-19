@@ -14,13 +14,18 @@ import android.util.Log;
 import com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract.FavoritesEntry;
 
 public class FavoritesContentProvider extends ContentProvider {
+
+    //Testing
     public static final String LOG_TAG = FavoritesContentProvider.class.getSimpleName();
 
-    private FavoritesDBHelper mDBHelper;
-
+    //Constants
     public static final int FAVES = 100;
     public static final int FAVES_WITH_ID = 101;
 
+    //Variables
+    private FavoritesDBHelper mDBHelper;
+
+    //Matcher
     public static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     static {
@@ -30,6 +35,7 @@ public class FavoritesContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
+        //create new database
         mDBHelper = new FavoritesDBHelper(getContext());
 
         return true;
@@ -38,29 +44,25 @@ public class FavoritesContentProvider extends ContentProvider {
     @Nullable
     @Override
     public Cursor query(@NonNull Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        //get a reference to a readable database
         SQLiteDatabase database = mDBHelper.getReadableDatabase();
 
-        Cursor cursor;
+        //declare return cursor
+        Cursor returnCursor;
 
         int match = sUriMatcher.match(uri);
         switch (match) {
             case FAVES:
-                cursor = database.query(FavoritesEntry.TABLE_NAME, projection, selection, selectionArgs,
+                returnCursor = database.query(FavoritesEntry.TABLE_NAME, projection, selection, selectionArgs,
                         null, null, sortOrder);
                 break;
             default:
                 throw new IllegalArgumentException("Cannot query unknown URI " + uri);
         }
 
-        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+        returnCursor.setNotificationUri(getContext().getContentResolver(), uri);
 
-        return cursor;
-    }
-
-    @Nullable
-    @Override
-    public String getType(@NonNull Uri uri) {
-        return null;
+        return returnCursor;
     }
 
     @Nullable
@@ -70,6 +72,7 @@ public class FavoritesContentProvider extends ContentProvider {
         int match = sUriMatcher.match(uri);
         switch (match) {
             case FAVES:
+                //get a writable version of the database
                 SQLiteDatabase database = mDBHelper.getWritableDatabase();
 
                 long id = database.insert(FavoritesEntry.TABLE_NAME, null, contentValues);
@@ -79,9 +82,8 @@ public class FavoritesContentProvider extends ContentProvider {
                     return null;
                 }
 
-//                getContext().getContentResolver().notifyChange(uri, null);
-
                 return ContentUris.withAppendedId(uri, id);
+
             default:
                 throw  new IllegalArgumentException("Insertion is not supported for " + uri);
         }
@@ -89,29 +91,35 @@ public class FavoritesContentProvider extends ContentProvider {
 
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
-
+        //get reference to writable version of the database
         SQLiteDatabase database = mDBHelper.getWritableDatabase();
 
         int rowsDeleted;
 
         int match = sUriMatcher.match(uri);
         switch (match) {
+
             case FAVES_WITH_ID:
+
                 selection = FavoritesEntry._ID + "=?";
+
                 selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
 
                 rowsDeleted = database.delete(FavoritesEntry.TABLE_NAME, selection, selectionArgs);
 
-//                if (rowsDeleted != 0) {
-//                    getContext().getContentResolver().notifyChange(uri, null);
-//                }
-
                 return rowsDeleted;
+
             default:
                 throw new IllegalArgumentException("Cannot delete from favorites");
         }
-
     }
+
+    @Nullable
+    @Override
+    public String getType(@NonNull Uri uri) {
+        return null;
+    }
+
 
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues contentValues, @Nullable String s, @Nullable String[] strings) {

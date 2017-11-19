@@ -52,8 +52,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     public static final String LOG_TAG = DetailsActivity.class.getSimpleName();
 
     //Constants
-    public static final int PROMO_LOADER = 0;
-    public static final int REVIEW_LOADER = 1;
     public static final int ADD_OR_DELETE_LOADER = 2;
     public static final int BUTTON_LOADER = 3;
     public static final String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/w500/";
@@ -61,7 +59,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     public static final String TRAILER_SAVE_INS_KEY = "trailer_key";
 
     //Variables
-    private int movieDatabaseId;
     private String movieName;
     private String movieOverview;
     private double movieRating;
