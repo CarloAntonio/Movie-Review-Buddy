@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:app="http://schemas.android.com/apk/res-auto"
              android:orientation="vertical"
              android:layout_width="match_parent"
-             android:layout_height="wrap_content"
-    >
+             android:layout_height="wrap_content">
 
     <ImageView
         android:id="@+id/poster_iv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
-        android:contentDescription="@string/movie_poster_container"
-        app:srcCompat="@mipmap/ic_launcher"/>
+        android:contentDescription="@string/movie_poster_container"/>
 
 </FrameLayout>
