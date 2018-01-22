@@ -1,4 +1,4 @@
-package com.riskitbiskit.moviereviewbuddy.MainActivity;
+package com.riskitbiskit.moviereviewbuddy.presenter;
 
 import android.content.Context;
 import android.content.Intent;
@@ -21,8 +21,9 @@ import android.widget.GridView;
 import android.widget.TextView;
 
 import com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract.FavoritesEntry;
-import com.riskitbiskit.moviereviewbuddy.DetailActivity.DetailsActivity;
+import com.riskitbiskit.moviereviewbuddy.adapters.MovieArrayAdapter;
 import com.riskitbiskit.moviereviewbuddy.R;
+import com.riskitbiskit.moviereviewbuddy.model.Movie;
 
 import org.json.JSONArray;
 import org.json.JSONException;

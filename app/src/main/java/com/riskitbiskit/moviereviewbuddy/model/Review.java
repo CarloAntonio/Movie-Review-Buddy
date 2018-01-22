@@ -1,4 +1,4 @@
-package com.riskitbiskit.moviereviewbuddy.DetailActivity;
+package com.riskitbiskit.moviereviewbuddy.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;

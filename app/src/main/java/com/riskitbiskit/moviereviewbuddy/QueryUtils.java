@@ -3,8 +3,8 @@ package com.riskitbiskit.moviereviewbuddy;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.riskitbiskit.moviereviewbuddy.DetailActivity.Review;
-import com.riskitbiskit.moviereviewbuddy.MainActivity.Movie;
+import com.riskitbiskit.moviereviewbuddy.model.Review;
+import com.riskitbiskit.moviereviewbuddy.model.Movie;
 
 import org.json.JSONArray;
 import org.json.JSONException;

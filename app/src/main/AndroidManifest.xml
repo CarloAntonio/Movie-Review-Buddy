@@ -14,7 +14,7 @@
         android:theme="@style/AppTheme">
 
         <activity
-            android:name=".MainActivity.MainActivity">
+            android:name=".presenter.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 
@@ -22,7 +22,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".DetailActivity.DetailsActivity">
+        <activity android:name=".presenter.DetailsActivity">
         </activity>
 
         <provider

@@ -1,4 +1,4 @@
-package com.riskitbiskit.moviereviewbuddy.MainActivity;
+package com.riskitbiskit.moviereviewbuddy.adapters;
 
 import android.content.Context;
 import android.support.annotation.LayoutRes;
@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
 import com.riskitbiskit.moviereviewbuddy.R;
+import com.riskitbiskit.moviereviewbuddy.model.Movie;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
