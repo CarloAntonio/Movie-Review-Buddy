@@ -21,4 +21,5 @@
     <string name="favorite_movies">Favorite Movies</string>
     <string name="add_to_favorites">Favorite!</string>
     <string name="the_movie_db_logo">The Movie DB Logo</string>
+    <string name="no_internet">No Internet</string>
 </resources>

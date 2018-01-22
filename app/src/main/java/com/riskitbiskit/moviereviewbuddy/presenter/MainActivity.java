@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.riskitbiskit.moviereviewbuddy.Database.FavoritesContract.FavoritesEntry;
@@ -58,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     //Views
     @BindView(R.id.no_internet_view)
-    TextView noInternetTV;
+    RelativeLayout noInternetView;
     @BindView(R.id.content_grid_view)
     GridView moviesGridView;
 
@@ -98,12 +99,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         } else {
             // if/else statement allows favorite page to be viewed outside of a network
             if (isFavoritesList) {
-                noInternetTV.setText("");
+                noInternetView.setVisibility(View.INVISIBLE);
             } else {
                 if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
                     makeNetworkCall(MOST_POPULAR_PATH);
                 } else {
-                    noInternetTV.setText(R.string.no_internet_connectivity);
+                    noInternetView.setVisibility(View.VISIBLE);
                 }
             }
         }
@@ -249,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         } else if (id == R.id.action_favorites) {
             getSupportLoaderManager().restartLoader(MOVIE_LOADER, null, this);
             isFavoritesList = true;
-            noInternetTV.setText("");
+            noInternetView.setVisibility(View.INVISIBLE);
         }
         return super.onOptionsItemSelected(item);
     }
