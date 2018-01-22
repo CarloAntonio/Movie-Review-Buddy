@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -56,12 +57,18 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public static final String ON_SAVE_INSTANCE_STATE_KEY = "key";
     public static final String FAVE_LIST_BOOLEAN = "faveBoolean";
     public static final int MOVIE_LOADER = 0;
+    private static final int NETWORK_ERROR = 1;
+    private static final int REQUEST_ERROR = 2;
 
     //Views
     @BindView(R.id.no_internet_view)
     RelativeLayout noInternetView;
     @BindView(R.id.content_grid_view)
     GridView moviesGridView;
+    @BindView(R.id.no_internet_tv)
+    TextView noInternetTV;
+    @BindView(R.id.no_internet_iv)
+    ImageView noInternetIV;
 
     //Fields
     private MovieArrayAdapter mMovieArrayAdapter;
@@ -80,8 +87,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onSaveInstanceState(outState);
     }
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         if (savedInstanceState != null) {
             extractInstanceState(savedInstanceState);
+            noInternetView.setVisibility(View.VISIBLE);
         } else {
             // if/else statement allows favorite page to be viewed outside of a network
             if (isFavoritesList) {
@@ -104,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
                     makeNetworkCall(MOST_POPULAR_PATH);
                 } else {
-                    noInternetView.setVisibility(View.VISIBLE);
+                    showErrorView(NETWORK_ERROR);
                 }
             }
         }
@@ -177,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mOkHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                showErrorView(REQUEST_ERROR);
                 Log.e(LOG_TAG, "Error requesting data from server");
             }
 
@@ -220,9 +227,26 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             refreshAdapter();
 
         } catch (JSONException e) {
+            showErrorView(REQUEST_ERROR);
             Log.e(LOG_TAG, "Problem parsing the movie JSON results", e);
         } catch (IOException e) {
+            showErrorView(REQUEST_ERROR);
             Log.e(LOG_TAG, "Problem with I/O", e);
+        }
+    }
+
+    private void showErrorView(int error_type) {
+        switch (error_type) {
+            case NETWORK_ERROR:
+                noInternetTV.setText(getResources().getText(R.string.no_internet_connectivity));
+                noInternetIV.setImageResource(R.drawable.no_internet);
+                noInternetView.setVisibility(View.VISIBLE);
+                break;
+            case REQUEST_ERROR:
+                noInternetTV.setText(R.string.error_requesting_data);
+                noInternetIV.setImageResource(R.drawable.mark);
+                noInternetView.setVisibility(View.VISIBLE);
+                break;
         }
     }
 

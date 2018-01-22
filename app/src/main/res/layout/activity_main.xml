@@ -33,24 +33,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-
-
         <TextView
             android:id="@+id/no_internet_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="@string/no_internet_connectivity"
+            tools:text="@string/no_internet_connectivity"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/colorPrimaryDark"/>
 
         <ImageView
+            android:id="@+id/no_internet_iv"
             android:layout_width="96dp"
             android:layout_height="96dp"
             android:layout_above="@+id/no_internet_tv"
             android:layout_centerHorizontal="true"
             android:contentDescription="@string/no_internet"
-            android:src="@drawable/no_internet"/>
+            tools:src="@drawable/no_internet"/>
 
     </RelativeLayout>
 
