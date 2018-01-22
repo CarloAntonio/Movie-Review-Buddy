@@ -68,6 +68,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     OkHttpClient mOkHttpClient;
     List<Movie> movies;
 
+    //save relevant data
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+
+        //package relevant info
+        outState.putParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY, (ArrayList<? extends Parcelable>) movies);
+        outState.putBoolean(FAVE_LIST_BOOLEAN, isFavoritesList);
+
+        super.onSaveInstanceState(outState);
+    }
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,12 +93,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         //Setup adapter
         mMovieArrayAdapter = new MovieArrayAdapter(this, R.layout.movie_poster_item, new ArrayList<Movie>());
 
-        if (savedInstanceState != null &&
-                savedInstanceState.containsKey(ON_SAVE_INSTANCE_STATE_KEY) &&
-                savedInstanceState.containsKey(FAVE_LIST_BOOLEAN)) {
-
+        if (savedInstanceState != null) {
             extractInstanceState(savedInstanceState);
-
         } else {
             // if/else statement allows favorite page to be viewed outside of a network
             if (isFavoritesList) {
@@ -245,16 +254,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         return super.onOptionsItemSelected(item);
     }
 
-    //save relevant data
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-
-        //Package relevant info
-        outState.putParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY, (ArrayList<? extends Parcelable>) movies);
-        outState.putBoolean(FAVE_LIST_BOOLEAN, isFavoritesList);
-
-        super.onSaveInstanceState(outState);
-    }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
