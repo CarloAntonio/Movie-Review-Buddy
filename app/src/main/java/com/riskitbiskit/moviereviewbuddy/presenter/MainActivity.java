@@ -48,8 +48,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     //Testing
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    //Constants 9248410cd68fafd7d26df8b01e1057b0
-    public static final String API_KEY = "";
+    //Constants
+    public static final String API_KEY = "9248410cd68fafd7d26df8b01e1057b0";
     public static final String ROOT_URL = "https://api.themoviedb.org/3";
     public static final String TOP_RATED_PATH = "/movie/top_rated";
     public static final String MOST_POPULAR_PATH = "/movie/popular";
@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public static final int MOVIE_LOADER = 0;
     private static final int NETWORK_ERROR = 1;
     private static final int REQUEST_ERROR = 2;
+    public static final int EMPTY_FAVORITES = 3;
     private static final String SAVED_EMPTY_VIEW_VALUE = "saved_empty_view_value";
 
     //Views
@@ -148,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
             makeNetworkCall(path);
         } else {
-            showErrorView(NETWORK_ERROR);
+            showEmptyView(NETWORK_ERROR);
         }
     }
 
@@ -159,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         movies = savedInstanceState.getParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY);
         //clean and add new movies to adapter
         if (movies != null && movies.size() == 0) {
-            showErrorView(savedInstanceState.getInt(SAVED_EMPTY_VIEW_VALUE));
+            showEmptyView(savedInstanceState.getInt(SAVED_EMPTY_VIEW_VALUE));
         }
         refreshAdapter();
     }
@@ -193,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         mOkHttpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                showErrorView(REQUEST_ERROR);
+                showEmptyView(REQUEST_ERROR);
                 Log.e(LOG_TAG, "Error requesting data from server");
             }
 
@@ -233,19 +234,22 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 movies.add(new Movie(movieTitle, movieOverview, movieRating, moviePosterPath, movieReleaseDate, movieId));
             }
 
+            //remove empty view
+            noInternetView.setVisibility(View.INVISIBLE);
+
             //clean and add new movies to adapter
             refreshAdapter();
 
         } catch (JSONException e) {
-            showErrorView(REQUEST_ERROR);
+            showEmptyView(REQUEST_ERROR);
             Log.e(LOG_TAG, "Problem parsing the movie JSON results", e);
         } catch (IOException e) {
-            showErrorView(REQUEST_ERROR);
+            showEmptyView(REQUEST_ERROR);
             Log.e(LOG_TAG, "Problem with I/O", e);
         }
     }
 
-    private void showErrorView(int error_type) {
+    private void showEmptyView(int error_type) {
         switch (error_type) {
             case NETWORK_ERROR:
                 currentEmptyViewValue = error_type;
@@ -256,6 +260,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             case REQUEST_ERROR:
                 currentEmptyViewValue = error_type;
                 noInternetTV.setText(R.string.error_requesting_data);
+                noInternetIV.setImageResource(R.drawable.mark);
+                noInternetView.setVisibility(View.VISIBLE);
+                break;
+            case EMPTY_FAVORITES:
+                currentEmptyViewValue = error_type;
+                noInternetTV.setText(R.string.no_movies_added);
                 noInternetIV.setImageResource(R.drawable.mark);
                 noInternetView.setVisibility(View.VISIBLE);
                 break;
@@ -286,11 +296,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         } else if (id == R.id.action_favorites) {
             getSupportLoaderManager().restartLoader(MOVIE_LOADER, null, this);
             isFavoritesList = true;
-            noInternetView.setVisibility(View.INVISIBLE);
         }
         return super.onOptionsItemSelected(item);
     }
-
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -318,6 +326,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         //clear old list of movies
         movies.clear();
+
+        if (cursor.getCount() == 0) {
+            showEmptyView(EMPTY_FAVORITES);
+        } else {
+            noInternetView.setVisibility(View.INVISIBLE);
+        }
 
         //cycle through each row inside cursor
         while (cursor.moveToNext()) {
