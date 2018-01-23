@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public static final int MOVIE_LOADER = 0;
     private static final int NETWORK_ERROR = 1;
     private static final int REQUEST_ERROR = 2;
+    private static final String SAVED_EMPTY_VIEW_VALUE = "saved_empty_view_value";
 
     //Views
     @BindView(R.id.no_internet_view)
@@ -73,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     //Fields
     private MovieArrayAdapter mMovieArrayAdapter;
     private boolean isFavoritesList = false;
+    private int currentEmptyViewValue = 1;
     OkHttpClient mOkHttpClient;
     List<Movie> movies;
 
@@ -83,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         //package relevant info
         outState.putParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY, (ArrayList<? extends Parcelable>) movies);
         outState.putBoolean(FAVE_LIST_BOOLEAN, isFavoritesList);
+        outState.putInt(SAVED_EMPTY_VIEW_VALUE, currentEmptyViewValue);
 
         super.onSaveInstanceState(outState);
     }
@@ -101,7 +104,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         if (savedInstanceState != null) {
             extractInstanceState(savedInstanceState);
-            noInternetView.setVisibility(View.VISIBLE);
         } else {
             // if/else statement allows favorite page to be viewed outside of a network
             if (isFavoritesList) {
@@ -147,10 +149,14 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     private void extractInstanceState(Bundle savedInstanceState) {
+        //pull boolean value for deciding for view wants to see favorites list
         isFavoritesList = savedInstanceState.getBoolean(FAVE_LIST_BOOLEAN);
         //pull list from saved instance state
         movies = savedInstanceState.getParcelableArrayList(ON_SAVE_INSTANCE_STATE_KEY);
         //clean and add new movies to adapter
+        if (movies != null && movies.size() == 0) {
+            showErrorView(savedInstanceState.getInt(SAVED_EMPTY_VIEW_VALUE));
+        }
         refreshAdapter();
     }
 
@@ -238,11 +244,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private void showErrorView(int error_type) {
         switch (error_type) {
             case NETWORK_ERROR:
+                currentEmptyViewValue = error_type;
                 noInternetTV.setText(getResources().getText(R.string.no_internet_connectivity));
                 noInternetIV.setImageResource(R.drawable.no_internet);
                 noInternetView.setVisibility(View.VISIBLE);
                 break;
             case REQUEST_ERROR:
+                currentEmptyViewValue = error_type;
                 noInternetTV.setText(R.string.error_requesting_data);
                 noInternetIV.setImageResource(R.drawable.mark);
                 noInternetView.setVisibility(View.VISIBLE);
