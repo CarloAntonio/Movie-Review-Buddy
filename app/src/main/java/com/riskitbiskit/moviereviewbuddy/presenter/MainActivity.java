@@ -236,6 +236,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
             //remove empty view
             noInternetView.setVisibility(View.INVISIBLE);
+            moviesGridView.setVisibility(View.VISIBLE);
 
             //clean and add new movies to adapter
             refreshAdapter();
@@ -256,18 +257,21 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 noInternetTV.setText(getResources().getText(R.string.no_internet_connectivity));
                 noInternetIV.setImageResource(R.drawable.no_internet);
                 noInternetView.setVisibility(View.VISIBLE);
+                moviesGridView.setVisibility(View.INVISIBLE);
                 break;
             case REQUEST_ERROR:
                 currentEmptyViewValue = error_type;
                 noInternetTV.setText(R.string.error_requesting_data);
                 noInternetIV.setImageResource(R.drawable.mark);
                 noInternetView.setVisibility(View.VISIBLE);
+                moviesGridView.setVisibility(View.INVISIBLE);
                 break;
             case EMPTY_FAVORITES:
                 currentEmptyViewValue = error_type;
                 noInternetTV.setText(R.string.no_movies_added);
                 noInternetIV.setImageResource(R.drawable.mark);
                 noInternetView.setVisibility(View.VISIBLE);
+                moviesGridView.setVisibility(View.INVISIBLE);
                 break;
         }
     }
@@ -331,6 +335,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             showEmptyView(EMPTY_FAVORITES);
         } else {
             noInternetView.setVisibility(View.INVISIBLE);
+            moviesGridView.setVisibility(View.VISIBLE);
         }
 
         //cycle through each row inside cursor
