@@ -48,8 +48,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     //Testing
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
 
-    //Constants
-    public static final String API_KEY = "9248410cd68fafd7d26df8b01e1057b0";
+    //Constants 9248410cd68fafd7d26df8b01e1057b0
+    public static final String API_KEY = "";
     public static final String ROOT_URL = "https://api.themoviedb.org/3";
     public static final String TOP_RATED_PATH = "/movie/top_rated";
     public static final String MOST_POPULAR_PATH = "/movie/popular";
@@ -109,11 +109,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             if (isFavoritesList) {
                 noInternetView.setVisibility(View.INVISIBLE);
             } else {
-                if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
-                    makeNetworkCall(MOST_POPULAR_PATH);
-                } else {
-                    showErrorView(NETWORK_ERROR);
-                }
+                makeNetworkRequest(MOST_POPULAR_PATH);
             }
         }
 
@@ -146,6 +142,14 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 startActivity(intent);
             }
         });
+    }
+
+    private void makeNetworkRequest(String path) {
+        if (getActiveNetworkInfo() != null && getActiveNetworkInfo().isConnected()) {
+            makeNetworkCall(path);
+        } else {
+            showErrorView(NETWORK_ERROR);
+        }
     }
 
     private void extractInstanceState(Bundle savedInstanceState) {
@@ -272,11 +276,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         // handle action bar item clicks
         if (id == R.id.action_popular) {
-            makeNetworkCall(MOST_POPULAR_PATH);
+            makeNetworkRequest(MOST_POPULAR_PATH);
             isFavoritesList = false;
             return true;
         } else if (id == R.id.action_top_rated) {
-            makeNetworkCall(TOP_RATED_PATH);
+            makeNetworkRequest(TOP_RATED_PATH);
             isFavoritesList = false;
             return true;
         } else if (id == R.id.action_favorites) {
