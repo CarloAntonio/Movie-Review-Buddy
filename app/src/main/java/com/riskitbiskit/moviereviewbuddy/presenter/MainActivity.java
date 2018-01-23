@@ -212,9 +212,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     private void processResponse(Response response) {
         try {
-            //clean up old movie list
-            movies.clear();
-
             //parse through json response
             String jsonResponse = response.body().string();
             JSONObject rootObject = new JSONObject(jsonResponse);
@@ -290,10 +287,14 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         // handle action bar item clicks
         if (id == R.id.action_popular) {
+            //clear movies list
+            movies.clear();
             makeNetworkRequest(MOST_POPULAR_PATH);
             isFavoritesList = false;
             return true;
         } else if (id == R.id.action_top_rated) {
+            //clear movies list
+            movies.clear();
             makeNetworkRequest(TOP_RATED_PATH);
             isFavoritesList = false;
             return true;
