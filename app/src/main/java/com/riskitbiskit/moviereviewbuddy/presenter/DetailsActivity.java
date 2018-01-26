@@ -4,7 +4,10 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Parcelable;
 import android.support.v4.app.LoaderManager;
@@ -12,6 +15,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.graphics.Palette;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -32,6 +36,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,6 +89,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     @BindView(R.id.add_to_faves_button) Button favesButton;
     @BindView(R.id.reviews_section) LinearLayout mReviewSectionLL;
     @BindView(R.id.trailer_section) LinearLayout mTrailerSectionLL;
+    @BindView(R.id.details_bg) LinearLayout mDetailsBgLL;
 
     //Loaders
     LoaderManager.LoaderCallbacks buttonCallback;
@@ -175,14 +181,36 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         ratingTV.setText(String.valueOf(movieRating));
         releaseTV.setText(movieReleaseDate);
 
-        //Set image to view
+        //get full url
         String fullUrl = BASE_IMAGE_URL + moviePosterPath;
+
+        //Set image to view
         Picasso.with(this).load(fullUrl).into(posterIV);
+
+        //setup info bg
+        try {
+            URL url = new URL(fullUrl);
+            Bitmap bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+            Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
+                @Override
+                public void onGenerated(Palette palette) {
+                    if (palette.getDarkMutedSwatch() != null) {
+                        mDetailsBgLL.setBackgroundColor(palette.getDarkMutedSwatch().getRgb());
+                    } else if (palette.getMutedSwatch() != null) {
+                        mDetailsBgLL.setBackgroundColor(palette.getMutedSwatch().getRgb());
+                    }
+                }
+            });
+        } catch(IOException e) {
+            System.out.println(e);
+        }
+
+
+
     }
 
     private void makeReviewNetworkCall() {
-
-        //Create full uri for review
+        //create full uri for review
         Uri baseUri = Uri.parse(MainActivity.ROOT_URL + "/movie/" + movieId + "/reviews");
         Uri.Builder builder = baseUri.buildUpon();
 
