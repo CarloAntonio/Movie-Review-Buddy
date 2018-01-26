@@ -150,53 +150,69 @@
 
                 </LinearLayout>
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:layout_height="2dp"
-                    android:background="@color/colorPrimaryDark"/>
-
-                <TextView
-                    android:id="@+id/trailers_header"
+                <LinearLayout
+                    android:id="@+id/trailer_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/colorPrimaryDark"
-                    android:gravity="center"
-                    android:text="@string/trailers"/>
+                    android:orientation="vertical">
 
-                <TableLayout
-                    android:id="@+id/trailers_table_layout"
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:layout_height="2dp"
+                        android:background="@color/colorPrimaryDark"/>
+
+                    <TextView
+                        android:id="@+id/trailers_header"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorPrimaryDark"
+                        android:gravity="center"
+                        android:text="@string/trailers"/>
+
+                    <TableLayout
+                        android:id="@+id/trailers_table_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:showDividers="middle"
+                        android:divider="@color/colorPrimary"/>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/reviews_section"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:showDividers="middle"
-                    android:divider="@color/colorPrimary"/>
+                    android:orientation="vertical">
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:layout_height="2dp"
-                    android:background="@color/colorPrimaryDark"/>
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:layout_height="2dp"
+                        android:background="@color/colorPrimaryDark"/>
 
-                <TextView
-                    android:id="@+id/reviews_header"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/colorPrimaryDark"
-                    android:gravity="center"
-                    android:text="@string/reviews"/>
+                    <TextView
+                        android:id="@+id/reviews_header"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/colorPrimaryDark"
+                        android:gravity="center"
+                        android:text="@string/reviews"/>
 
-                <TableLayout
-                    android:id="@+id/review_table_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:showDividers="middle"
-                    android:divider="@color/colorPrimary"/>
+                    <TableLayout
+                        android:id="@+id/review_table_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:showDividers="middle"
+                        android:divider="@color/colorPrimary"/>
+
+                </LinearLayout>
 
             </LinearLayout>
 

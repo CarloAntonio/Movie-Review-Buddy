@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -71,26 +72,18 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     List<String> mVideoPaths;
 
     //Views
-    @BindView(R.id.main_content_sv)
-    ScrollView mScrollView;
-    @BindView(R.id.errorTV)
-    TextView mErrorTV;
-    @BindView(R.id.title_tv)
-    TextView titleTV;
-    @BindView(R.id.overview_tv)
-    TextView overviewTV;
-    @BindView(R.id.rating_tv)
-    TextView ratingTV;
-    @BindView(R.id.poster_iv)
-    ImageView posterIV;
-    @BindView(R.id.release_tv)
-    TextView releaseTV;
-    @BindView(R.id.trailers_table_layout)
-    TableLayout trailerTableLayout;
-    @BindView(R.id.review_table_layout)
-    TableLayout reviewTableLayout;
-    @BindView(R.id.add_to_faves_button)
-    Button favesButton;
+    @BindView(R.id.main_content_sv) ScrollView mScrollView;
+    @BindView(R.id.errorTV) TextView mErrorTV;
+    @BindView(R.id.title_tv) TextView titleTV;
+    @BindView(R.id.overview_tv) TextView overviewTV;
+    @BindView(R.id.rating_tv) TextView ratingTV;
+    @BindView(R.id.poster_iv) ImageView posterIV;
+    @BindView(R.id.release_tv) TextView releaseTV;
+    @BindView(R.id.trailers_table_layout) TableLayout trailerTableLayout;
+    @BindView(R.id.review_table_layout) TableLayout reviewTableLayout;
+    @BindView(R.id.add_to_faves_button) Button favesButton;
+    @BindView(R.id.reviews_section) LinearLayout mReviewSectionLL;
+    @BindView(R.id.trailer_section) LinearLayout mTrailerSectionLL;
 
     //Loaders
     LoaderManager.LoaderCallbacks buttonCallback;
@@ -132,8 +125,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
             //if no previous review or trailer data therefore, make a network call
         } else {
-            //initialize OkHttpClient
-            mOkHttpClient = new OkHttpClient();
 
             //get intent
             Intent intent = getIntent();
@@ -141,6 +132,9 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
             setupGeneralDateViews(mMovie);
 
+            //initialize OkHttpClient
+            mOkHttpClient = new OkHttpClient();
+            //make necessary network calls
             makeReviewNetworkCall();
             makePromoTrailerCall();
         }
@@ -216,6 +210,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         //create a new list of reviews
         mReviews = new ArrayList<>();
+        JSONArray resultsArray = null;
 
         //process response
         try {
@@ -224,7 +219,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
             //parse through json response
             JSONObject rootObject = new JSONObject(jsonResponse);
-            JSONArray resultsArray = rootObject.getJSONArray("results");
+            resultsArray = rootObject.getJSONArray("results");
             for (int i = 0; i < resultsArray.length(); i++) {
                 JSONObject currentMovieReview = resultsArray.getJSONObject(i);
 
@@ -239,11 +234,20 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             Log.e(LOG_TAG, "Problem with I/O", IOE);
         }
 
-        //create rows for each review item
-        createReviewRows();
+        //check to see if there are any reviews
+        if (resultsArray == null || resultsArray.length() <= 0 ) {
+           //if not remove reviews section
+            mReviewSectionLL.setVisibility(View.GONE);
+        } else  {
+            //create rows for each review item
+            createReviewRows();
+        }
     }
 
     private void createReviewRows() {
+        //make review section visible
+        mReviewSectionLL.setVisibility(View.VISIBLE);
+
         View tableRow;
         if (!mReviews.isEmpty()) {
             //Create a new row for each video path
@@ -298,12 +302,13 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         //create new list of video paths
         mVideoPaths = new ArrayList<>();
+        JSONArray resultsArray = null;
 
         try {
             String jsonResponse = response.body().string();
 
             JSONObject rootObject = new JSONObject(jsonResponse);
-            JSONArray resultsArray = rootObject.getJSONArray("results");
+            resultsArray = rootObject.getJSONArray("results");
             for (int i = 0; i < resultsArray.length(); i++) {
                 JSONObject currentMovieReview = resultsArray.getJSONObject(i);
 
@@ -318,10 +323,20 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             Log.e(LOG_TAG, "Problem with I/O for trailer data", IOE);
         }
 
-        createTrailerRows();
+        //check to see if there are any reviews
+        if (resultsArray == null || resultsArray.length() <= 0 ) {
+            //if not remove reviews section
+            mTrailerSectionLL.setVisibility(View.GONE);
+        } else  {
+            //create rows for each trailer item
+            createTrailerRows();
+        }
     }
 
     private void createTrailerRows() {
+        //make trailer section visible
+        mTrailerSectionLL.setVisibility(View.VISIBLE);
+
         View tableRow;
         if (!mVideoPaths.isEmpty()) {
             //Create a new row for each video path
@@ -456,7 +471,5 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     public void onClick(View view) {
         String identifier = (String) view.getTag();
         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=" + identifier)));
-        trailerTableLayout.removeAllViews();
-        reviewTableLayout.removeAllViews();
     }
 }
