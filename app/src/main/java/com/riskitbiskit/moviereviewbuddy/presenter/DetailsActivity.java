@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -58,8 +59,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     public static final String REVIEW_SAVE_INS_KEY = "review_key";
     public static final String TRAILER_SAVE_INS_KEY = "trailer_key";
 
-    //Variables
-    private Movie mMovie;
     private String movieName;
     private String movieOverview;
     private double movieRating;
@@ -72,6 +71,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     List<String> mVideoPaths;
 
     //Views
+    @BindView(R.id.main_content_sv)
+    ScrollView mScrollView;
     @BindView(R.id.errorTV)
     TextView mErrorTV;
     @BindView(R.id.title_tv)
@@ -95,6 +96,16 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     LoaderManager.LoaderCallbacks buttonCallback;
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        //save review data
+        outState.putParcelableArrayList(REVIEW_SAVE_INS_KEY, (ArrayList<? extends Parcelable>) mReviews);
+        //save trailer data
+        outState.putStringArrayList(TRAILER_SAVE_INS_KEY, (ArrayList<String>) mVideoPaths);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
@@ -105,45 +116,18 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         //get intent
         Intent intent = getIntent();
-        if (intent != null && intent.hasExtra(Movie.MOVIE)) {
 
-            //hide loading error
-            mErrorTV.setVisibility(View.INVISIBLE);
+        setupGeneralDateViews(intent);
 
-            //extract data from intent
-            mMovie = intent.getParcelableExtra(Movie.MOVIE);
+        //Locate favorites button
+        favesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getSupportLoaderManager().initLoader(ADD_OR_DELETE_LOADER, null, (LoaderManager.LoaderCallbacks<Cursor>) mContext);
+            }
+        });
 
-            movieName = mMovie.getOriginalTitle();
-            movieOverview = mMovie.getOverview();
-            movieRating = mMovie.getVoteAverage();
-            moviePosterPath = mMovie.getPosterPath();
-            movieReleaseDate = mMovie.getReleaseDate();
-            movieId = mMovie.getMovieId();
-
-            //Set views
-            titleTV.setText(movieName);
-            overviewTV.setText(movieOverview);
-            ratingTV.setText(String.valueOf(movieRating));
-            releaseTV.setText(movieReleaseDate);
-
-            //Set image to view
-            String fullUrl = BASE_IMAGE_URL + moviePosterPath;
-            Picasso.with(this).load(fullUrl).into(posterIV);
-
-            //Locate favorites button
-            favesButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    getSupportLoaderManager().initLoader(ADD_OR_DELETE_LOADER, null, (LoaderManager.LoaderCallbacks<Cursor>) mContext);
-                }
-            });
-
-        } else {
-            //Show loading error
-            mErrorTV.setVisibility(View.VISIBLE);
-        }
-
-        //Prevent unnecessary network calls
+        //check for saved data
         if (savedInstanceState != null) {
             //check if review data was previously saved
             if (savedInstanceState.containsKey(REVIEW_SAVE_INS_KEY)) {
@@ -162,7 +146,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                 makePromoTrailerCall();
             }
 
-        //no previous review or trailer data therefore, make a network call
+            //no previous review or trailer data therefore, make a network call
         } else {
             makeReviewNetworkCall();
             makePromoTrailerCall();
@@ -171,6 +155,27 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         createButtonCallback();
 
         getSupportLoaderManager().initLoader(BUTTON_LOADER, null, buttonCallback);
+    }
+
+    private void setupGeneralDateViews(Intent intent) {
+        //extract data from intent
+        Movie movie = intent.getParcelableExtra(Movie.MOVIE);
+        movieName = movie.getOriginalTitle();
+        movieOverview = movie.getOverview();
+        movieRating = movie.getVoteAverage();
+        moviePosterPath = movie.getPosterPath();
+        movieReleaseDate = movie.getReleaseDate();
+        movieId = movie.getMovieId();
+
+        //Set views
+        titleTV.setText(movieName);
+        overviewTV.setText(movieOverview);
+        ratingTV.setText(String.valueOf(movieRating));
+        releaseTV.setText(movieReleaseDate);
+
+        //Set image to view
+        String fullUrl = BASE_IMAGE_URL + moviePosterPath;
+        Picasso.with(this).load(fullUrl).into(posterIV);
     }
 
     private void makeReviewNetworkCall() {
@@ -453,16 +458,5 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=" + identifier)));
         trailerTableLayout.removeAllViews();
         reviewTableLayout.removeAllViews();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        //save review data
-        outState.putParcelableArrayList(REVIEW_SAVE_INS_KEY, (ArrayList<? extends Parcelable>) mReviews);
-
-        //save trailer data
-        outState.putStringArrayList(TRAILER_SAVE_INS_KEY, (ArrayList<String>) mVideoPaths);
-
-        super.onSaveInstanceState(outState);
     }
 }
