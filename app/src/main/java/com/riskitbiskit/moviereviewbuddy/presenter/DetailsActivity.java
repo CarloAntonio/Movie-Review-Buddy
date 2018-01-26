@@ -12,12 +12,10 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatDelegate;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TableLayout;
 import android.widget.TextView;
@@ -151,7 +149,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         favesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getSupportLoaderManager().initLoader(ADD_OR_DELETE_LOADER, null, (LoaderManager.LoaderCallbacks<Cursor>) mContext);
+                getSupportLoaderManager().initLoader(ADD_OR_DELETE_LOADER, null, DetailsActivity.this);
             }
         });
 
