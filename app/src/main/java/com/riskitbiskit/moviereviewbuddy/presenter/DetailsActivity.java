@@ -111,12 +111,20 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
             //check if review data was previously saved
             if (savedInstanceState.containsKey(REVIEW_SAVE_INS_KEY)) {
                 mReviews = savedInstanceState.getParcelableArrayList(REVIEW_SAVE_INS_KEY);
-                createReviewRows();
+                if (mReviews == null || mReviews.size() <= 0) {
+                    mReviewSectionLL.setVisibility(View.GONE);
+                } else {
+                    createReviewRows();
+                }
             }
 
             if (savedInstanceState.containsKey(TRAILER_SAVE_INS_KEY)) {
                 mVideoPaths = savedInstanceState.getStringArrayList(TRAILER_SAVE_INS_KEY);
-                createTrailerRows();
+                if (mVideoPaths == null || mVideoPaths.size() <= 0) {
+                    mTrailerSectionLL.setVisibility(View.GONE);
+                } else {
+                    createTrailerRows();
+                }
             }
 
             mMovie = savedInstanceState.getParcelable(MOVIE_SAVE_INS_KEY);
