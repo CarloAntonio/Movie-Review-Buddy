@@ -5,12 +5,7 @@ import android.os.Parcelable;
 
 public class Movie implements Parcelable {
     //public static variables
-    public static final String MOVIE_NAME = "name";
-    public static final String MOVIE_OVERVIEW = "overview";
-    public static final String MOVIE_RATING = "rating";
-    public static final String MOVIE_POSTER_PATH = "poster";
-    public static final String MOVIE_RELEASE_DATE = "releaseDate";
-    public static final String MOVIE_ID = "movieId";
+    public static final String MOVIE = "movie";
 
     //private globle variables
     private String originalTitle;

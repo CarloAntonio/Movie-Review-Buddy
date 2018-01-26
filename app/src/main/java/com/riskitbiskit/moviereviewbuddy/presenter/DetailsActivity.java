@@ -12,6 +12,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatDelegate;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -71,8 +72,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     List<String> mVideoPaths;
 
     //Views
-    @BindView(R.id.loading_error)
-    RelativeLayout relativeLayout;
+    @BindView(R.id.errorTV)
+    TextView mErrorTV;
     @BindView(R.id.title_tv)
     TextView titleTV;
     @BindView(R.id.overview_tv)
@@ -102,15 +103,15 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         //initialize OkHttpClient
         mOkHttpClient = new OkHttpClient();
 
-        //Get intent details
+        //get intent
         Intent intent = getIntent();
-        if (intent != null && intent.hasExtra("Movie")) {
+        if (intent != null && intent.hasExtra(Movie.MOVIE)) {
 
-            //Hide loading error
-            relativeLayout.setVisibility(View.INVISIBLE);
+            //hide loading error
+            mErrorTV.setVisibility(View.INVISIBLE);
 
-            //Extract data from intent
-            mMovie = intent.getParcelableExtra("Movie");
+            //extract data from intent
+            mMovie = intent.getParcelableExtra(Movie.MOVIE);
 
             movieName = mMovie.getOriginalTitle();
             movieOverview = mMovie.getOverview();
@@ -139,7 +140,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         } else {
             //Show loading error
-            relativeLayout.setVisibility(View.VISIBLE);
+            mErrorTV.setVisibility(View.VISIBLE);
         }
 
         //Prevent unnecessary network calls

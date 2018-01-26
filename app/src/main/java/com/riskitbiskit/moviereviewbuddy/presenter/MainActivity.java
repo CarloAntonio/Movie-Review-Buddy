@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
                 //Create intent and pass in chosen movie
                 Intent intent = new Intent(getBaseContext(), DetailsActivity.class);
-                intent.putExtra("Movie", chosenMovie);
+                intent.putExtra(Movie.MOVIE, chosenMovie);
 
                 //Start activity for result
                 startActivity(intent);

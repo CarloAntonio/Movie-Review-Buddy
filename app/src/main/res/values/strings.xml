@@ -24,4 +24,5 @@
     <string name="no_internet">No Internet</string>
     <string name="error_requesting_data">Error requesting data from server</string>
     <string name="no_movies_added">No Movies Added To Favorites!</string>
+    <string name="play_button">play button</string>
 </resources>
