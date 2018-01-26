@@ -58,6 +58,7 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     public static final String TRAILER_SAVE_INS_KEY = "trailer_key";
 
     //Variables
+    private Movie mMovie;
     private String movieName;
     private String movieOverview;
     private double movieRating;
@@ -103,21 +104,20 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
 
         //Get intent details
         Intent intent = getIntent();
-        if (intent != null
-                && intent.hasExtra(Movie.MOVIE_NAME) && intent.hasExtra(Movie.MOVIE_OVERVIEW)
-                && intent.hasExtra(Movie.MOVIE_RATING) && intent.hasExtra(Movie.MOVIE_POSTER_PATH)
-                && intent.hasExtra(Movie.MOVIE_RELEASE_DATE) && intent.hasExtra(Movie.MOVIE_ID)) {
+        if (intent != null && intent.hasExtra("Movie")) {
 
             //Hide loading error
             relativeLayout.setVisibility(View.INVISIBLE);
 
             //Extract data from intent
-            movieName = intent.getStringExtra(Movie.MOVIE_NAME);
-            movieOverview = intent.getStringExtra(Movie.MOVIE_OVERVIEW);
-            movieRating = intent.getDoubleExtra(Movie.MOVIE_RATING, 0.0);
-            moviePosterPath = intent.getStringExtra(Movie.MOVIE_POSTER_PATH);
-            movieReleaseDate = intent.getStringExtra(Movie.MOVIE_RELEASE_DATE);
-            movieId = intent.getLongExtra(Movie.MOVIE_ID, 0);
+            mMovie = intent.getParcelableExtra("Movie");
+
+            movieName = mMovie.getOriginalTitle();
+            movieOverview = mMovie.getOverview();
+            movieRating = mMovie.getVoteAverage();
+            moviePosterPath = mMovie.getPosterPath();
+            movieReleaseDate = mMovie.getReleaseDate();
+            movieId = mMovie.getMovieId();
 
             //Set views
             titleTV.setText(movieName);

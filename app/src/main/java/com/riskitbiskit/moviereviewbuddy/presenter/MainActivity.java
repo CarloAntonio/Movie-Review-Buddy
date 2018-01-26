@@ -122,22 +122,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 //Get chosen movie
                 Movie chosenMovie = mMovieArrayAdapter.getItem(i);
 
-                //Extract traits
-                String name = chosenMovie.getOriginalTitle();
-                String overview = chosenMovie.getOverview();
-                double rating = chosenMovie.getVoteAverage();
-                String posterPath = chosenMovie.getPosterPath();
-                String releaseDate = chosenMovie.getReleaseDate();
-                long id = chosenMovie.getMovieId();
-
-                //Create intent and add traits
+                //Create intent and pass in chosen movie
                 Intent intent = new Intent(getBaseContext(), DetailsActivity.class);
-                intent.putExtra(Movie.MOVIE_NAME, name);
-                intent.putExtra(Movie.MOVIE_OVERVIEW, overview);
-                intent.putExtra(Movie.MOVIE_RATING, rating);
-                intent.putExtra(Movie.MOVIE_POSTER_PATH, posterPath);
-                intent.putExtra(Movie.MOVIE_RELEASE_DATE, releaseDate);
-                intent.putExtra(Movie.MOVIE_ID, id);
+                intent.putExtra("Movie", chosenMovie);
 
                 //Start activity for result
                 startActivity(intent);
