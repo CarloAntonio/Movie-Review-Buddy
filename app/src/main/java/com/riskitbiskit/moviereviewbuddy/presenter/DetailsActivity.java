@@ -58,7 +58,9 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
     public static final String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/w500/";
     public static final String REVIEW_SAVE_INS_KEY = "review_key";
     public static final String TRAILER_SAVE_INS_KEY = "trailer_key";
+    public static final String MOVIE_SAVE_INS_KEY = "movie_key";
 
+    private Movie mMovie;
     private String movieName;
     private String movieOverview;
     private double movieRating;
@@ -101,6 +103,8 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         outState.putParcelableArrayList(REVIEW_SAVE_INS_KEY, (ArrayList<? extends Parcelable>) mReviews);
         //save trailer data
         outState.putStringArrayList(TRAILER_SAVE_INS_KEY, (ArrayList<String>) mVideoPaths);
+        //save movie
+        outState.putParcelable(MOVIE_SAVE_INS_KEY, mMovie);
 
         super.onSaveInstanceState(outState);
     }
@@ -110,22 +114,6 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
         ButterKnife.bind(this);
-
-        //initialize OkHttpClient
-        mOkHttpClient = new OkHttpClient();
-
-        //get intent
-        Intent intent = getIntent();
-
-        setupGeneralDateViews(intent);
-
-        //Locate favorites button
-        favesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getSupportLoaderManager().initLoader(ADD_OR_DELETE_LOADER, null, (LoaderManager.LoaderCallbacks<Cursor>) mContext);
-            }
-        });
 
         //check for saved data
         if (savedInstanceState != null) {
@@ -146,20 +134,40 @@ public class DetailsActivity extends AppCompatActivity implements LoaderManager.
                 makePromoTrailerCall();
             }
 
-            //no previous review or trailer data therefore, make a network call
+            mMovie = savedInstanceState.getParcelable(MOVIE_SAVE_INS_KEY);
+
+            setupGeneralDateViews(mMovie);
+
+            //if no previous review or trailer data therefore, make a network call
         } else {
+            //initialize OkHttpClient
+            mOkHttpClient = new OkHttpClient();
+
+            //get intent
+            Intent intent = getIntent();
+            mMovie = intent.getParcelableExtra(Movie.MOVIE);
+
+            setupGeneralDateViews(mMovie);
+
             makeReviewNetworkCall();
             makePromoTrailerCall();
         }
+
+        //Locate favorites button
+        favesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getSupportLoaderManager().initLoader(ADD_OR_DELETE_LOADER, null, (LoaderManager.LoaderCallbacks<Cursor>) mContext);
+            }
+        });
 
         createButtonCallback();
 
         getSupportLoaderManager().initLoader(BUTTON_LOADER, null, buttonCallback);
     }
 
-    private void setupGeneralDateViews(Intent intent) {
+    private void setupGeneralDateViews(Movie movie) {
         //extract data from intent
-        Movie movie = intent.getParcelableExtra(Movie.MOVIE);
         movieName = movie.getOriginalTitle();
         movieOverview = movie.getOverview();
         movieRating = movie.getVoteAverage();
