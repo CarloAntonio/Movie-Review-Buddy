@@ -1,7 +1,7 @@
 # Movie-Review-Buddy
 
 ## Udacity Android Nanodegree Project 1 & 2: Popular Movies
-This is a fully functional and colorful android application that I made for Udacity's Android Developer Nanodegree Program. The app displays a grid of posters based on the user's search preferences. The application supports searchs based on popularity and rating. The user can also display a list of previously saved movie titles. Details of the movies can be explored by clicking on the poster thumbnail.
+This is a fully functional and colorful android application. The app displays a grid of posters based on popularity, rating, or user favorites (if user has any saved). Details of each movie can be further expanding by tapping on poster thumbnail. Details page includes title, rating, release date, list of clickable movie trailers, and movie reviews.
 
 ### Features:
 This app can:
@@ -9,6 +9,23 @@ This app can:
 * Save favorite movies and later display them as a grid
 * Allow users to watch movie trailers
 * Allow users to read movie reviews
+
+### Concepts Applied
+* Model-View-Presenter(MVP) design pattern for organizing code
+* Making network calls to 3rd party APIs
+* Working with multiple threads
+* Parsing JavaScript Object Notation (JSON) data
+* Handling and persisting data through different activity lifecycles
+* Handling orientation changes
+
+### Technologies Implemented
+* SQLite3 for data storage
+
+### Libraries Used
+* Picasso
+* OkHttp3
+* Android Support
+	* AppCompat, Constraint, Design, Palette
 
 ### How to work with the source code:
 This application uses [The Movie Database, TMDb](https://www.themoviedb.org/) API to serve the movie data. You must provide your own API key in order to build the app. After obtaining an API key, add to the "API_KEY" constant in the MainActivity.java file. 
@@ -22,14 +39,6 @@ Details Screen </br>
 
 Main Screen + Menu (Landscape) </br>
 <img src="https://user-images.githubusercontent.com/25759516/32746985-3ae9c8ae-c86c-11e7-8d1f-6b4913ab98c5.png" width="600">
-
-
-### Libraries Used
-* Picasso
-* Glide
-* OkHttp3
-* Android Support
-	* AppCompat, Constraint, Design
 
 ### Notes:
 * Republish of Game of Flicks
